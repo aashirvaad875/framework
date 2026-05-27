@@ -1,0 +1,14 @@
+{{!-- Guard template --}}
+import { Guard, Request, Response } from '@framework/core';
+
+{{#if description}}
+/**
+ * {{description}}
+ */
+{{/if}}
+export class {{className}} implements Guard {
+  canActivate(req: Request, res: Response): boolean {
+    // TODO: Implement authorization logic
+    return true;
+  }
+}

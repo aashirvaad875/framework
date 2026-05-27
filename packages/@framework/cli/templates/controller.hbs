@@ -1,0 +1,36 @@
+{{!-- Controller template --}}
+import { Controller, Get, Post, Put, Delete, Param, Body } from '@framework/core';
+{{#if description}}
+/**
+ * {{description}}
+ */
+{{/if}}
+@Controller('/{{moduleName}}')
+export class {{className}} {
+  constructor() {}
+
+  @Get()
+  findAll() {
+    return { message: 'List all {{moduleName}}' };
+  }
+
+  @Get('/:id')
+  findOne(@Param('id') id: string) {
+    return { message: `Get {{moduleName}} with id: ${id}` };
+  }
+
+  @Post()
+  create(@Body() body: any) {
+    return { message: 'Create {{moduleName}}', data: body };
+  }
+
+  @Put('/:id')
+  update(@Param('id') id: string, @Body() body: any) {
+    return { message: `Update {{moduleName}} with id: ${id}`, data: body };
+  }
+
+  @Delete('/:id')
+  delete(@Param('id') id: string) {
+    return { message: `Delete {{moduleName}} with id: ${id}` };
+  }
+}

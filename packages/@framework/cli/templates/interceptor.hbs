@@ -1,0 +1,20 @@
+{{!-- Interceptor template --}}
+import { Interceptor, ExecutionContext } from '@framework/core';
+
+{{#if description}}
+/**
+ * {{description}}
+ */
+{{/if}}
+export class {{className}} implements Interceptor {
+  intercept(context: ExecutionContext, next: () => Promise<any>) {
+    // Before handler
+    console.log('Before handler');
+
+    return next().then(data => {
+      // After handler
+      console.log('After handler');
+      return data;
+    });
+  }
+}

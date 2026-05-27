@@ -1,0 +1,15 @@
+{{!-- Module template --}}
+import { Module } from '@framework/core';
+
+{{#if description}}
+/**
+ * {{description}}
+ */
+{{/if}}
+@Module({
+  imports: [],
+  controllers: [],
+  providers: [],
+  exports: [],
+})
+export class {{className}} {}

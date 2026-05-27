@@ -1,0 +1,37 @@
+{{!-- Service template --}}
+import { Injectable } from '@framework/core';
+
+{{#if description}}
+/**
+ * {{description}}
+ */
+{{/if}}
+@Injectable()
+export class {{className}} {
+  constructor() {}
+
+  async findAll() {
+    // TODO: Implement findAll
+    return [];
+  }
+
+  async findOne(id: string) {
+    // TODO: Implement findOne
+    return null;
+  }
+
+  async create(data: any) {
+    // TODO: Implement create
+    return data;
+  }
+
+  async update(id: string, data: any) {
+    // TODO: Implement update
+    return data;
+  }
+
+  async delete(id: string) {
+    // TODO: Implement delete
+    return { success: true };
+  }
+}

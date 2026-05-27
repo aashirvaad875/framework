@@ -1,0 +1,17 @@
+{{!-- App template --}}
+import { Application } from '@framework/core';
+import { AppModule } from './app.module.js';
+
+async function bootstrap() {
+  const app = new Application({
+    modules: [AppModule],
+  });
+
+  await app.listen(3000);
+  console.log('Application running on http://localhost:3000');
+}
+
+bootstrap().catch(err => {
+  console.error('Failed to start application:', err);
+  process.exit(1);
+});

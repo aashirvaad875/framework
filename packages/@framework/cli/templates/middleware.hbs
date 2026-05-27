@@ -1,0 +1,15 @@
+{{!-- Middleware template --}}
+import { Middleware, Request, Response, NextFunction } from '@framework/core';
+
+{{#if description}}
+/**
+ * {{description}}
+ */
+{{/if}}
+@Middleware()
+export class {{className}} {
+  use(req: Request, res: Response, next: NextFunction) {
+    // TODO: Implement middleware logic
+    next();
+  }
+}

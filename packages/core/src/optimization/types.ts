@@ -127,6 +127,7 @@ export interface TrieNode {
   handler?: (context: any) => Promise<any>;
   paramName?: string;
   isParam: boolean;
+  route?: RouteEntry;
 }
 
 /**

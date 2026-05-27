@@ -77,8 +77,9 @@ export class RouteCompiler {
         current = current.children.get(nodeKey)!;
       }
 
-      // Store the handler and route metadata at the leaf node
+      // Store the handler and full route entry at the leaf node
       current.handler = handler;
+      current.route = route;
 
       // Cache the route by method:path key for quick retrieval
       const cacheKey = `${method}:${path}`;
@@ -89,6 +90,7 @@ export class RouteCompiler {
   /**
    * Performs O(path length) lookup of a route by HTTP method and path.
    * First attempts exact segment matches, then falls back to parameter nodes.
+   * Returns the RouteEntry directly from the trie without cache iteration.
    *
    * @param method The HTTP method (GET, POST, etc.)
    * @param path The request path (e.g., '/users/123')
@@ -96,67 +98,32 @@ export class RouteCompiler {
    */
   lookup(method: HttpMethod, path: string): RouteEntry | null {
     // Get the trie root for this HTTP method
-    const root = this.routeTrees.get(method);
-    if (!root) {
+    const tree = this.routeTrees.get(method);
+    if (!tree) {
       return null;
     }
 
     // Split path by '/' and filter empty segments
-    const segments = path.split('/').filter(seg => seg.length > 0);
+    const segments = path.split('/').filter(Boolean);
 
     // Navigate the trie, trying exact matches first, then parameter nodes
-    let current = root;
+    let node = tree;
     for (const segment of segments) {
       // Try exact match first
-      if (current.children.has(segment)) {
-        current = current.children.get(segment)!;
-      }
+      let nextNode = node.children.get(segment);
       // Fall back to parameter node (:param)
-      else if (current.children.has(':param')) {
-        current = current.children.get(':param')!;
+      if (!nextNode) {
+        nextNode = node.children.get(':param');
       }
       // No match found
-      else {
+      if (!nextNode) {
         return null;
       }
+      node = nextNode;
     }
 
-    // Return the handler if present, otherwise null
-    if (current.handler) {
-      // Try to find in cache by matching route metadata
-      for (const [key, route] of this.routeCache.entries()) {
-        if (key.startsWith(`${method}:`)) {
-          const routePath = key.substring(`${method}:`.length);
-          // Check if this could be our route by matching trie structure
-          const routeSegments = routePath.split('/').filter(s => s);
-          const currentSegments = segments;
-
-          if (routeSegments.length === currentSegments.length) {
-            // Check if the route matches the lookup path
-            let matches = true;
-            for (let i = 0; i < routeSegments.length; i++) {
-              const routeSeg = routeSegments[i];
-              // If the route has a parameter, it can match any value
-              // If the route has exact segment, it must match
-              if (!routeSeg.startsWith(':') && routeSeg !== currentSegments[i]) {
-                matches = false;
-                break;
-              }
-            }
-
-            if (matches && route.method === method && route.handler === current.handler) {
-              return route;
-            }
-          }
-        }
-      }
-
-      // If cache lookup failed, return null
-      // In practice, the route should always be in cache if handler exists
-      return null;
-    }
-
-    return null;
+    // Return the stored route directly from trie
+    return node.route ?? null;
   }
 
   /**

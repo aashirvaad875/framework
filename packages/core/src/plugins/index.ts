@@ -10,3 +10,5 @@ export {
   PLUGIN_LOAD_HOOK_KEY,
   PLUGIN_UNLOAD_HOOK_KEY,
 } from './types.js';
+
+export { PluginContextImpl } from './plugin.context.js';

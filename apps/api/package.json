@@ -1,0 +1,39 @@
+{
+  "name": "@framework/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "dev": "node --loader tsx src/main-test.ts",
+    "dev:db": "node --loader tsx src/main.ts",
+    "start": "node dist/main.js",
+    "test": "vitest",
+    "test:cov": "vitest --coverage",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "migrate": "node --loader tsx scripts/migrate.ts",
+    "seed": "node --loader tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@framework/core": "workspace:*",
+    "@framework/logger": "workspace:*",
+    "dotenv": "^16.3.1",
+    "joi": "^17.10.0",
+    "pg": "^8.11.2",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.3.16",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@framework/cli": "workspace:*",
+    "@framework/eslint-config": "workspace:*",
+    "@framework/tsconfig": "workspace:*",
+    "@types/node": "^20.8.0",
+    "@vitest/ui": "^1.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.2.2",
+    "vitest": "^1.0.0",
+    "vitest-mock-extended": "^1.2.0"
+  }
+}

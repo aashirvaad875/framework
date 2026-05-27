@@ -290,6 +290,68 @@ describe('MetadataCache', () => {
         cache.deserialize('invalid json {]');
       }).toThrow();
     });
+
+    it('should preserve string token metadata through serialization round-trip', () => {
+      // Set up metadata for string tokens (symbols cannot be serialized to JSON)
+      const stringToken1: Token = 'AppModule';
+      const stringToken2: Token = 'UserService';
+
+      const moduleMetadata: ModuleMetadata = {
+        providers: ['service1', 'service2'],
+        imports: ['HttpModule'],
+        exports: ['service1'],
+      };
+
+      const providerMetadata = { scope: 'singleton', dependencies: ['DatabaseService'] };
+
+      cache.setModuleMetadata(stringToken1, moduleMetadata);
+      cache.setProviderMetadata(stringToken2, providerMetadata);
+
+      // Serialize
+      const json = cache.serialize();
+
+      // Create new cache and deserialize
+      const cache2 = new MetadataCache();
+      cache2.deserialize(json);
+
+      // Verify string token metadata is preserved
+      expect(cache2.getModuleMetadata(stringToken1)).toEqual(moduleMetadata);
+
+      // Verify string token metadata is preserved
+      expect(cache2.getProviderMetadata(stringToken2)).toEqual(providerMetadata);
+    });
+
+    it('should preserve route metadata through serialization round-trip', () => {
+      const token: Token = 'UserController';
+      const routes: RouteEntry[] = [
+        {
+          method: 'GET',
+          path: '/users',
+          pattern: /^\/users$/,
+          paramNames: [],
+          handler: async () => ({ users: [] }),
+        },
+        {
+          method: 'POST',
+          path: '/users',
+          pattern: /^\/users$/,
+          paramNames: [],
+          handler: async () => ({ id: 1 }),
+        },
+      ];
+
+      cache.setRouteMetadata(token, routes);
+      const json = cache.serialize();
+
+      const cache2 = new MetadataCache();
+      cache2.deserialize(json);
+
+      const retrieved = cache2.getRouteMetadata(token);
+      expect(retrieved).toHaveLength(2);
+      expect(retrieved![0].method).toBe('GET');
+      expect(retrieved![0].path).toBe('/users');
+      expect(retrieved![1].method).toBe('POST');
+    });
   });
 
   describe('Integration Scenarios', () => {

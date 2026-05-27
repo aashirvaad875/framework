@@ -116,22 +116,55 @@ export class MetadataCache {
 
   /**
    * Serialize cache to JSON string
-   * Note: WeakMaps cannot be serialized, so we only store version and timestamp
+   * Note: WeakMaps (object/class tokens) and Symbols cannot be serialized.
+   * WeakMaps hold references to objects that are not JSON-serializable and may be
+   * garbage collected. Symbols are not JSON-compatible (they serialize as null).
+   * We only serialize Maps containing string token metadata, which are stable
+   * and JSON-compatible for persistent storage.
    */
   serialize(): string {
-    const serialized = {
-      version: '1.0',
+    // Only include entries where the key is a string (symbols won't serialize)
+    const stringModuleEntries = Array.from(this.stringTokenModuleMetadata.entries()).filter(
+      ([key]) => typeof key === 'string'
+    );
+    const stringRouteEntries = Array.from(this.stringTokenRouteMetadata.entries()).filter(
+      ([key]) => typeof key === 'string'
+    );
+    const stringProviderEntries = Array.from(this.stringTokenProviderMetadata.entries()).filter(
+      ([key]) => typeof key === 'string'
+    );
+
+    const data = {
+      version: 1,
       timestamp: Date.now(),
+      stringTokens: {
+        modules: stringModuleEntries,
+        routes: stringRouteEntries,
+        providers: stringProviderEntries,
+      },
     };
-    return JSON.stringify(serialized);
+    return JSON.stringify(data);
   }
 
   /**
    * Deserialize cache from JSON string
+   * Restores string token metadata from serialized data.
+   * WeakMap entries (object/class tokens) and Symbol-keyed entries are intentionally
+   * not restored as they are session-scoped and cannot be reliably reconstructed
+   * from JSON (object references and symbols don't survive serialization).
    */
   deserialize(json: string): void {
     try {
-      JSON.parse(json);
+      const data = JSON.parse(json);
+      if (data.stringTokens?.modules) {
+        this.stringTokenModuleMetadata = new Map(data.stringTokens.modules);
+      }
+      if (data.stringTokens?.routes) {
+        this.stringTokenRouteMetadata = new Map(data.stringTokens.routes);
+      }
+      if (data.stringTokens?.providers) {
+        this.stringTokenProviderMetadata = new Map(data.stringTokens.providers);
+      }
     } catch (error) {
       throw new Error(`Invalid JSON in MetadataCache.deserialize: ${error}`);
     }

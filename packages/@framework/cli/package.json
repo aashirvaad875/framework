@@ -1,0 +1,36 @@
+{
+  "name": "@framework/cli",
+  "version": "1.0.0",
+  "description": "Enterprise CLI for scaffolding framework projects and modules",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "framework": "./bin/framework.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --outDir dist --declaration",
+    "dev": "node --loader tsx src/index.ts",
+    "test": "vitest",
+    "cli": "node --loader tsx bin/framework.js"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.15",
+    "ts-morph": "^21.0.1",
+    "handlebars": "^4.7.8",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "tsup": "^8.0.2",
+    "vitest": "^1.2.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}

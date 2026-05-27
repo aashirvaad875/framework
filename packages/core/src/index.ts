@@ -1,4 +1,24 @@
-export { Controller, Get, Post, Put, Delete, Patch, Injectable, Inject, UseGuard, UsePipe, Param, Query, Body, Req, Res, CONTROLLER_METADATA_KEY, ROUTE_METADATA_KEY, INJECT_METADATA_KEY, MODULE_METADATA_KEY } from './decorators/index.js';
+export {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Patch,
+  Injectable,
+  Inject,
+  UseGuard,
+  UsePipe,
+  Param,
+  Query,
+  Body,
+  Req,
+  Res,
+  CONTROLLER_METADATA_KEY,
+  ROUTE_METADATA_KEY,
+  INJECT_METADATA_KEY,
+  MODULE_METADATA_KEY,
+} from './decorators/index.js';
 export * from './di/index.js';
 export * from './container.js';
 export { Module } from './module.js';
@@ -24,3 +44,4 @@ export * from './events/index.js';
 export * from './scheduler/index.js';
 export * from './swagger/index.js';
 export * from './microservices/index.js';
+export * from './plugins/index.js';

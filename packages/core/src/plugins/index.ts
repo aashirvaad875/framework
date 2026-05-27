@@ -11,4 +11,13 @@ export {
   PLUGIN_UNLOAD_HOOK_KEY,
 } from './types.js';
 
+export {
+  Plugin,
+  OnPluginLoad,
+  OnPluginUnload,
+  PluginEvent,
+  type PluginDecoratorOptions,
+  type PluginEventMetadata,
+} from './decorators.js';
+
 export { PluginContextImpl } from './plugin.context.js';

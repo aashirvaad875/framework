@@ -99,6 +99,16 @@ export interface MiddlewareExecutor {
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
 
 /**
+ * Module metadata containing providers, imports, and exports
+ */
+export interface ModuleMetadata {
+  providers?: unknown[];
+  imports?: unknown[];
+  exports?: unknown[];
+  [key: string]: unknown;
+}
+
+/**
  * Route entry in the routing table
  */
 export interface RouteEntry {

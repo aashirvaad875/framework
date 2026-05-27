@@ -1,8 +1,19 @@
 import type { RequestHandler, ErrorRequestHandler } from 'express';
 import type { Server } from 'node:http';
-import { HttpAdapter, ExpressAdapter, MiddlewarePipeline, RouteRegistry, RouteExplorer, LifecycleRunner } from './http/index.js';
+import {
+  HttpAdapter,
+  ExpressAdapter,
+  MiddlewarePipeline,
+  RouteRegistry,
+  RouteExplorer,
+  LifecycleRunner,
+} from './http/index.js';
 import { Module } from './module.js';
 import { Logger } from '@framework/logger';
+import { Container } from './di/index.js';
+import { EventBus } from './events/index.js';
+import { PluginManager } from './plugins/plugin.manager.js';
+import type { PluginManifest } from './plugins/types.js';
 import cors from 'cors';
 
 export interface ApplicationOptions {
@@ -24,6 +35,10 @@ export class Application {
   private readonly host: string;
   private readonly logger: Logger;
   private globalErrorHandler?: ErrorRequestHandler;
+  private pluginManager: PluginManager | null = null;
+  private pluginConfig: Record<string, Record<string, unknown>> = {};
+  readonly container: Container;
+  readonly eventBus: EventBus;
 
   constructor(options: ApplicationOptions = {}, adapter?: HttpAdapter) {
     this.adapter = adapter || new ExpressAdapter();
@@ -31,6 +46,8 @@ export class Application {
     this.registry = new RouteRegistry();
     this.lifecycle = new LifecycleRunner();
     this.explorer = new RouteExplorer(this.adapter);
+    this.container = new Container();
+    this.eventBus = new EventBus();
 
     this.port = options.port || 3000;
     this.host = options.host || 'localhost';
@@ -118,8 +135,33 @@ export class Application {
   getExpressApp() {
     return this.adapter.getInstance();
   }
+
+  registerPlugin(manifest: PluginManifest, pluginModule: unknown): void {
+    if (!this.pluginManager) {
+      this.pluginManager = new PluginManager(this, this.container);
+    }
+    this.pluginManager.registerPlugin(manifest, pluginModule);
+  }
+
+  setPluginConfig(config: Record<string, Record<string, unknown>>): void {
+    this.pluginConfig = config;
+  }
+
+  async loadPlugins(): Promise<void> {
+    if (this.pluginManager) {
+      await this.pluginManager.loadPlugins();
+      void this.eventBus.emit('plugins:loaded');
+    }
+  }
+
+  getPluginManager(): PluginManager | undefined {
+    return this.pluginManager ?? undefined;
+  }
 }
 
-export function createApplication(options?: ApplicationOptions, adapter?: HttpAdapter): Application {
+export function createApplication(
+  options?: ApplicationOptions,
+  adapter?: HttpAdapter
+): Application {
   return new Application(options, adapter);
 }

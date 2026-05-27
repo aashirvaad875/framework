@@ -1,0 +1,12 @@
+{
+  "name": "basic-example-plugin",
+  "version": "1.0.0",
+  "description": "Basic example plugin demonstrating plugin system features",
+  "author": "Framework Team",
+  "keywords": ["example", "demo"],
+  "dependencies": [],
+  "capabilities": {
+    "services": ["ExampleService"],
+    "events": ["example:initialized"]
+  }
+}

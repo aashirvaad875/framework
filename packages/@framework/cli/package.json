@@ -13,7 +13,7 @@
     "framework": "./bin/framework.js"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --outDir dist --declaration",
+    "build": "tsup src/index.ts --format esm --outDir dist --dts",
     "dev": "node --loader tsx src/index.ts",
     "test": "vitest",
     "cli": "node --loader tsx bin/framework.js"
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "tsx": "^4.7.0",
-    "tsup": "^8.0.2",
+    "tsup": "^8.5.1",
     "vitest": "^1.2.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.11.0",

@@ -2,9 +2,9 @@
   "extends": "@framework/tsconfig/library.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "vitest.config.ts", "vitest.setup.ts"],
   "exclude": ["node_modules", "dist"]
 }

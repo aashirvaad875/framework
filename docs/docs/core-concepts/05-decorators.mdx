@@ -1,0 +1,409 @@
+---
+title: Decorators
+description: Understanding decorators in @framework/core - TypeScript's metaprogramming feature that enables clean, declarative code through intent expression
+---
+
+# Decorators: Expressive Framework Integration
+
+Decorators are a core feature of @framework/core that enable clean, readable code by letting you declare intent directly on classes, methods, and parameters. This guide explores what decorators are, why they matter in our framework, and how to use them effectively.
+
+## What Are Decorators?
+
+A decorator is a TypeScript feature that allows you to attach metadata and functionality to classes, methods, properties, and parameters. At their core, decorators are just functions that are called at declaration time.
+
+```typescript
+// A simple decorator
+function Log(target: Function) {
+  console.log(`Decorating ${target.name}`);
+}
+
+// Applied to a class
+@Log
+export class UserService {
+  // ...
+}
+```
+
+When this code runs, the `@Log` decorator function is called with the `UserService` class as an argument. This happens at the moment the class is defined, not when it's instantiated.
+
+### TypeScript Configuration
+
+To use decorators, ensure your `tsconfig.json` includes:
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "ES2020",
+    "module": "ESNext"
+  }
+}
+```
+
+The `emitDecoratorMetadata` option is crucial—it enables TypeScript to emit type information as metadata that the framework can inspect at runtime.
+
+## Why Use Decorators in @framework/core?
+
+Decorators solve several real problems in web frameworks:
+
+### 1. Cleaner Code - Less Boilerplate
+
+Without decorators, defining a route might look like:
+
+```typescript
+const routes = {
+  get: [
+    {
+      path: '/users/:id',
+      handler: getUserById,
+      method: 'GET',
+      guards: [authGuard],
+      pipes: [validationPipe],
+    }
+  ]
+};
+```
+
+With decorators:
+
+```typescript
+@Controller('/users')
+export class UserController {
+  @Get('/:id')
+  @UseGuard(authGuard)
+  @UsePipe(validationPipe)
+  getUserById(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
+}
+```
+
+The decorator version is more readable and the intent is immediately clear.
+
+### 2. Framework Integration
+
+Decorators tell the framework how to treat your code. When you write:
+
+```typescript
+@Injectable()
+export class UserService {
+  // ...
+}
+```
+
+You're telling the framework: "This class should be managed by the dependency injection container." The framework uses this information to automatically instantiate the service, manage its lifecycle, and inject it where needed.
+
+### 3. Separation of Concerns
+
+Decorators separate framework concerns from business logic:
+
+```typescript
+// Business logic is clean and focused
+@Controller('/todos')
+export class TodoController {
+  constructor(private todos: TodoService) {}
+
+  @Get()
+  list() {
+    // Just business logic
+    return this.todos.findAll();
+  }
+
+  @Post()
+  @UsePipe(new ValidationPipe())  // Framework concern
+  create(@Body() dto: CreateTodoDto) {
+    return this.todos.create(dto);
+  }
+}
+```
+
+The business logic isn't polluted with validation logic or route definitions.
+
+## How Decorators Work
+
+### The Three Phases
+
+1. **Declaration (Compile-time)** - Decorators are evaluated when the class/method is defined
+2. **Metadata Storage** - Information is stored using the `reflect-metadata` library
+3. **Inspection (Runtime)** - The framework reads metadata and configures behavior
+
+Here's what happens:
+
+```typescript
+import 'reflect-metadata';
+
+@Controller('/users')
+export class UserController {
+  @Get('/:id')
+  getUser(@Param('id') id: string) {
+    return { id };
+  }
+}
+
+// Behind the scenes, the framework inspects metadata:
+const controllerPath = Reflect.getMetadata('controller:metadata', UserController);
+// { path: '/users' }
+
+const routes = Reflect.getMetadata('route:metadata', UserController.prototype);
+// [{ method: 'GET', path: '/:id', propertyKey: 'getUser' }]
+
+const paramMetadata = Reflect.getMetadata('params', UserController.prototype, 'getUser');
+// { 0: { source: 'param', name: 'id' } }
+```
+
+### Reflect-metadata
+
+@framework/core uses the `reflect-metadata` library to store and retrieve information. This library extends JavaScript's `Reflect` object with `getMetadata` and `defineMetadata` methods:
+
+```typescript
+// Store metadata
+Reflect.defineMetadata('key', value, target);
+
+// Retrieve metadata
+Reflect.getMetadata('key', target);
+```
+
+This is the mechanism that allows the framework to "read" what your decorators declare.
+
+## Decorators in @framework/core
+
+Our framework provides decorators organized into several categories:
+
+### Class Decorators (Define Structure)
+
+These decorators mark classes and tell the framework what role they play:
+
+```typescript
+// Mark a class as a controller that handles HTTP requests
+@Controller('/api/users')
+export class UserController {}
+
+// Mark a class as a module that groups related features
+@Module({
+  controllers: [UserController],
+  providers: [UserService],
+})
+export class UserModule {}
+
+// Mark a class as injectable (a service or dependency)
+@Injectable()
+export class UserService {}
+```
+
+### Method Decorators (Define Routes)
+
+These mark methods as HTTP handlers:
+
+```typescript
+@Controller('/todos')
+export class TodoController {
+  // GET /todos
+  @Get()
+  findAll() {}
+
+  // POST /todos
+  @Post()
+  create() {}
+
+  // GET /todos/:id
+  @Get('/:id')
+  findOne() {}
+
+  // PUT /todos/:id
+  @Put('/:id')
+  update() {}
+
+  // DELETE /todos/:id
+  @Delete('/:id')
+  remove() {}
+
+  // PATCH /todos/:id
+  @Patch('/:id')
+  patch() {}
+}
+```
+
+### Parameter Decorators (Extract Values)
+
+These extract data from requests:
+
+```typescript
+@Post('/users')
+createUser(
+  @Body() dto: CreateUserDto,              // Request body
+  @Param('id') id: string,                  // URL parameter
+  @Query('filter') filter: string,          // Query string
+  @Header('authorization') auth: string,   // Header value
+  @Req() req: Request,                      // Raw request
+  @Res() res: Response,                     // Raw response
+) {}
+```
+
+### Middleware & Guard Decorators (Add Behavior)
+
+These add cross-cutting concerns:
+
+```typescript
+@Controller('/secure')
+export class SecureController {
+  @Get()
+  @UseGuard(authGuard)                      // Authorization
+  @UsePipe(validationPipe)                  // Validation
+  @UseInterceptor(loggingInterceptor)       // Logging
+  getSecureData() {}
+}
+```
+
+### Lifecycle Decorators (Hook Into Framework Events)
+
+These allow your code to run at specific moments:
+
+```typescript
+@Injectable()
+export class UserService implements OnModuleInit {
+  onModuleInit() {
+    // Run when module initializes
+    console.log('UserService initialized');
+  }
+}
+```
+
+## Common Patterns
+
+### Pattern 1: Secure Endpoint
+
+Protect an endpoint with authentication and validation:
+
+```typescript
+@Controller('/admin')
+export class AdminController {
+  @Post('/users')
+  @UseGuard(authGuard, roleGuard('admin'))
+  @UsePipe(validationPipe)
+  createUser(@Body() dto: CreateUserDto) {
+    return this.users.create(dto);
+  }
+}
+```
+
+### Pattern 2: Dependency Injection
+
+Mark a service as injectable with a specific scope:
+
+```typescript
+@Injectable({ scope: Scope.Singleton })
+export class ConfigService {
+  // Single instance for entire app
+}
+
+@Injectable({ scope: Scope.Scoped })
+export class RequestService {
+  // New instance per request
+}
+```
+
+### Pattern 3: Global Validation
+
+Apply validation to all requests in a controller:
+
+```typescript
+@Controller('/api/products')
+@UsePipe(globalValidationPipe)
+export class ProductController {
+  @Get()
+  findAll() {}
+
+  @Post()
+  create(@Body() dto: CreateProductDto) {}
+  // All methods inherit the pipe
+}
+```
+
+## Best Practices
+
+### 1. Don't Over-Decorate
+
+Decorators are powerful but can become hard to read with too many:
+
+```typescript
+// Too many decorators
+@Controller('/users')
+@UseGuard(guard1, guard2, guard3)
+@UsePipe(pipe1, pipe2, pipe3)
+@UseInterceptor(interceptor1, interceptor2)
+@UseMiddleware(middleware1, middleware2)
+export class UserController {}
+
+// Better: Group and compose
+const secureEndpoint = () => [
+  UseGuard(authGuard, roleGuard),
+  UsePipe(validationPipe),
+  UseInterceptor(loggingInterceptor),
+];
+
+@Controller('/users')
+@secureEndpoint()
+export class UserController {}
+```
+
+### 2. Express Intent Clearly
+
+Use decorators to make your intent obvious:
+
+```typescript
+// Clear
+@Controller('/api/users')
+@UseGuard(jwtAuthGuard)
+export class UserController {}
+
+// Unclear - requires reading implementation
+@Controller('/users')
+export class UserController {}
+// Need to read the implementation to know it requires auth
+```
+
+### 3. Follow Naming Conventions
+
+Use consistent naming:
+
+```typescript
+// Routes: @Get, @Post, @Put, @Delete
+// Injection: @Injectable, @Inject
+// Protection: @UseGuard, @UsePipe, @UseInterceptor
+// Parameters: @Body, @Param, @Query, @Header
+// Lifecycle: OnModuleInit, OnApplicationBootstrap
+```
+
+### 4. Composition Over Mixing
+
+Create composite decorators for common patterns:
+
+```typescript
+// Create a custom decorator for a pattern
+function AuthorizedRoute(...roles: string[]) {
+  return applyDecorators(
+    UseGuard(new RoleGuard(roles)),
+    UseInterceptor(auditLoggingInterceptor)
+  );
+}
+
+// Use it
+@Controller('/admin')
+export class AdminController {
+  @Post('/promote')
+  @AuthorizedRoute('ADMIN', 'SUPER_ADMIN')
+  promoteUser(@Body() dto: PromoteUserDto) {}
+}
+```
+
+## See Also
+
+- [Dependency Injection](/docs/core-concepts/dependency-injection) - How dependency resolution works
+- [Decorators Reference](/docs/core-concepts/decorators-reference) - Complete decorator catalog
+- [Modules](/docs/core-concepts/modules) - Module structure and composition
+- [Module Loading](/docs/core-concepts/module-loading) - How modules are loaded
+
+## Next Steps
+
+Read the [Decorators Reference](/docs/core-concepts/decorators-reference) for a complete catalog of available decorators with examples for each.

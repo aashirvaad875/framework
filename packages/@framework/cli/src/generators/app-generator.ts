@@ -52,8 +52,11 @@ export class AppGenerator extends BaseGenerator {
         }
       }
 
+      if (context.force && (await fs.pathExists(targetPath))) {
+        await fs.emptyDir(targetPath);
+      }
       const scaffoldPath = path.join(this.templateEngine.templatesPath, 'project-scaffold');
-      await fs.copy(scaffoldPath, targetPath, { overwrite: context.force ?? false });
+      await fs.copy(scaffoldPath, targetPath, { overwrite: true });
       await this.replaceTokens(targetPath, appName);
 
       try {
@@ -69,12 +72,17 @@ export class AppGenerator extends BaseGenerator {
             : packageManager === 'yarn'
               ? 'yarn install'
               : 'npm install';
-        execSync(installCmd, { cwd: targetPath, stdio: 'inherit' });
+        try {
+          execSync(installCmd, { cwd: targetPath, stdio: 'inherit' });
+        } catch {
+          console.warn(`Warning: ${installCmd} failed. Run it manually in the project directory.`);
+        }
       }
 
       const runCmd =
         packageManager === 'pnpm' ? 'pnpm' : packageManager === 'yarn' ? 'yarn' : 'npm';
       const installNote = skipInstall ? `  ${runCmd} install\n` : '';
+      const displayPath = path.relative(process.cwd(), targetPath) || targetPath;
 
       return {
         success: true,
@@ -82,7 +90,7 @@ export class AppGenerator extends BaseGenerator {
         errors: [],
         message: [
           `\n✅ Project ${appName} created successfully!`,
-          `\n  cd ${appName}`,
+          `\n  cd ${displayPath}`,
           `  cp .env.example .env`,
           installNote,
           `  ${runCmd} run dev\n`,

@@ -1,0 +1,509 @@
+---
+title: Modules
+description: Understanding the Module System - the core organizing principle for grouping related features in @framework/core applications
+---
+
+# Modules: Organizing Your Code
+
+Modules are the fundamental building blocks of @framework/core applications. A module is a container that organizes related features—controllers, services, repositories, and utilities—into a cohesive, reusable unit. This guide explores how to design, structure, and work with modules effectively.
+
+## What is a Module?
+
+A module encapsulates a feature or domain in your application. Instead of scattering related code across your project, modules let you keep everything together:
+
+- **Controllers** - Handle HTTP requests
+- **Services** - Contain business logic
+- **Providers** - Dependencies and utilities
+- **Dependencies** - Other modules your module needs
+
+Think of modules like packages: each focuses on one responsibility, manages its own dependencies, and provides a clean public API through exports.
+
+### Why Modules Matter
+
+Modules provide several benefits:
+
+1. **Organization** - Group related code by feature or domain
+2. **Reusability** - Use the same module across multiple projects
+3. **Testability** - Isolate modules for focused testing
+4. **Scalability** - Scale from small APIs to complex microservices architectures
+5. **Maintainability** - Clear responsibility boundaries reduce coupling
+
+## Module Structure
+
+A module consists of several parts, all declared in a single class decorated with `@Module`:
+
+```typescript
+import { Module, Controller, Injectable } from '@framework/core';
+
+@Module({
+  controllers: [TodoController],         // HTTP request handlers
+  providers: [TodoService, TodoRepository], // Dependencies & services
+  imports: [DatabaseModule],              // Required modules
+  exports: [TodoService],                 // Public API
+  isGlobal: false,                        // Availability scope
+})
+export class TodoModule {}
+```
+
+### Controllers
+
+Controllers are the entry points for HTTP requests. They're classes decorated with `@Controller` that handle specific routes:
+
+```typescript
+import { Controller, Get, Post, Body, Param } from '@framework/core';
+import { TodoService } from '../services/todo.service.js';
+
+@Controller('/api/todos')
+export class TodoController {
+  constructor(private readonly todoService: TodoService) {}
+
+  @Get()
+  getAllTodos() {
+    return this.todoService.findAll();
+  }
+
+  @Post()
+  createTodo(@Body() createTodoDto: CreateTodoDto) {
+    return this.todoService.create(createTodoDto);
+  }
+
+  @Get('/:id')
+  getTodoById(@Param('id') id: string) {
+    return this.todoService.findOne(parseInt(id, 10));
+  }
+}
+```
+
+### Services and Business Logic
+
+Services contain your application's business logic. They're injectable and typically accessed through dependency injection:
+
+```typescript
+import { Injectable } from '@framework/core';
+
+@Injectable()
+export class TodoService {
+  private todos: Map<number, Todo> = new Map();
+  private nextId = 1;
+
+  findAll(): Todo[] {
+    return Array.from(this.todos.values());
+  }
+
+  findOne(id: number): Todo | undefined {
+    return this.todos.get(id);
+  }
+
+  create(createTodoDto: CreateTodoDto): Todo {
+    const todo: Todo = {
+      id: this.nextId++,
+      ...createTodoDto,
+      createdAt: new Date(),
+    };
+    this.todos.set(todo.id, todo);
+    return todo;
+  }
+
+  update(id: number, updateTodoDto: UpdateTodoDto): Todo | undefined {
+    const todo = this.todos.get(id);
+    if (!todo) return undefined;
+    Object.assign(todo, updateTodoDto);
+    this.todos.set(id, todo);
+    return todo;
+  }
+
+  delete(id: number): boolean {
+    return this.todos.delete(id);
+  }
+}
+```
+
+### Providers
+
+Providers are any injectable dependency. This includes services, repositories, utilities, and even values:
+
+```typescript
+@Module({
+  providers: [
+    // Class-based provider
+    TodoService,
+    
+    // Factory provider
+    {
+      provide: 'DATABASE_CONNECTION',
+      useFactory: async () => {
+        return await createDatabaseConnection();
+      },
+    },
+    
+    // Value provider
+    {
+      provide: 'CONFIG',
+      useValue: { apiUrl: 'https://api.example.com' },
+    },
+  ],
+})
+export class TodoModule {}
+```
+
+### Configuration and Metadata
+
+Modules can store configuration in their provider array. Use the `provide` property to register named dependencies:
+
+```typescript
+@Module({
+  providers: [
+    {
+      provide: 'LOGGER',
+      useClass: LoggerService,
+    },
+    {
+      provide: 'MAX_TODOS',
+      useValue: 1000,
+    },
+  ],
+})
+export class TodoModule {}
+```
+
+## Declaring Dependencies
+
+### Importing Other Modules
+
+Use the `imports` array to declare that your module depends on another module:
+
+```typescript
+import { Module } from '@framework/core';
+import { DatabaseModule } from '../database/database.module.js';
+import { AuthModule } from '../auth/auth.module.js';
+
+@Module({
+  imports: [DatabaseModule, AuthModule],
+  controllers: [UserController],
+  providers: [UserService],
+})
+export class UserModule {}
+```
+
+The framework automatically resolves the dependency graph and initializes modules in the correct order.
+
+### Exporting Providers
+
+Make certain providers available to modules that import you:
+
+```typescript
+@Module({
+  providers: [DatabaseService, UserService],
+  exports: [DatabaseService], // Only DatabaseService is public
+})
+export class DatabaseModule {}
+
+@Module({
+  imports: [DatabaseModule],
+  providers: [ReportService],
+})
+export class ReportingModule {
+  // Can access DatabaseService through dependency injection
+  constructor(private db: DatabaseService) {}
+}
+```
+
+## Module Patterns
+
+### Feature Modules
+
+Feature modules organize a specific feature with all its dependencies:
+
+```typescript
+// src/modules/products/product.module.ts
+import { Module } from '@framework/core';
+import { ProductController } from './controllers/product.controller.js';
+import { ProductService } from './services/product.service.js';
+import { ProductRepository } from './repositories/product.repository.js';
+
+@Module({
+  controllers: [ProductController],
+  providers: [ProductService, ProductRepository],
+  exports: [ProductService], // Expose service to other modules
+})
+export class ProductModule {}
+```
+
+### Shared Modules
+
+Shared modules export utilities and services used across multiple features:
+
+```typescript
+// src/modules/shared/shared.module.ts
+import { Module } from '@framework/core';
+import { LoggerService } from './services/logger.service.js';
+import { ValidationService } from './services/validation.service.js';
+
+@Module({
+  providers: [LoggerService, ValidationService],
+  exports: [LoggerService, ValidationService],
+})
+export class SharedModule {}
+```
+
+### Core Modules
+
+Core modules are typically loaded once at application startup:
+
+```typescript
+// src/modules/core/core.module.ts
+import { Module } from '@framework/core';
+import { ConfigService } from './services/config.service.js';
+import { DatabaseModule } from '../database/database.module.js';
+
+@Module({
+  imports: [DatabaseModule],
+  providers: [ConfigService],
+  exports: [ConfigService, DatabaseModule],
+  isGlobal: true, // Available to all modules without importing
+})
+export class CoreModule {}
+```
+
+## Barrel Exports
+
+Use barrel exports (index.ts files) to provide a clean public API:
+
+```typescript
+// src/modules/todo/index.ts
+export { TodoModule } from './todo.module.js';
+export { TodoService } from './services/todo.service.js';
+export { CreateTodoDto } from './dtos/create-todo.dto.js';
+export { UpdateTodoDto } from './dtos/update-todo.dto.js';
+export type { Todo } from './entities/todo.entity.js';
+```
+
+Then import cleanly from other modules:
+
+```typescript
+import { TodoModule, TodoService } from '@/modules/todo/index.js';
+```
+
+## Best Practices
+
+### 1. Single Responsibility
+
+Each module should focus on one feature or domain:
+
+```typescript
+// ✅ Good: Each module has one responsibility
+@Module({
+  controllers: [UserController],
+  providers: [UserService, UserRepository],
+})
+export class UserModule {}
+
+// ❌ Avoid: Mixing unrelated features
+@Module({
+  controllers: [UserController, ProductController, OrderController],
+  providers: [UserService, ProductService, OrderService],
+})
+export class MixedModule {}
+```
+
+### 2. Dependency Direction
+
+Keep dependencies pointing downward (from high-level to low-level):
+
+```typescript
+// ✅ Good: Controllers depend on services
+// Services depend on repositories
+// Repositories depend on database adapters
+
+// ❌ Avoid: Circular dependencies
+// Services depending on controllers
+// Repositories depending on services
+```
+
+### 3. Export Carefully
+
+Export only what's meant to be public. Internal utilities should stay private:
+
+```typescript
+@Module({
+  providers: [
+    UserService,
+    UserRepository,
+    PasswordHasher, // Internal utility
+  ],
+  exports: [UserService], // Only expose the service
+})
+export class UserModule {}
+```
+
+### 4. Name Modules by Domain
+
+Use domain-driven names:
+
+```typescript
+// ✅ Good names
+UserModule        // Manages users
+ProductModule     // Manages products
+PaymentModule     // Handles payments
+NotificationModule // Sends notifications
+
+// ❌ Avoid generic names
+UtilityModule
+HelpersModule
+ComponentModule
+```
+
+### 5. Organize by Feature
+
+Structure your project by feature, not by type:
+
+```typescript
+// ✅ Good: Feature-based structure
+src/
+  modules/
+    users/
+      controllers/
+      services/
+      repositories/
+      dtos/
+      user.module.ts
+    products/
+      controllers/
+      services/
+      repositories/
+      dtos/
+      product.module.ts
+
+// ❌ Avoid: Type-based structure
+src/
+  controllers/
+  services/
+  repositories/
+  dtos/
+```
+
+## Common Patterns
+
+### Repository Pattern
+
+Separate data access from business logic:
+
+```typescript
+@Injectable()
+export class UserRepository {
+  async findAll(): Promise<User[]> {
+    // Database query
+  }
+
+  async findById(id: number): Promise<User | undefined> {
+    // Database query
+  }
+
+  async create(userData: CreateUserDto): Promise<User> {
+    // Database write
+  }
+}
+
+@Injectable()
+export class UserService {
+  constructor(private readonly userRepository: UserRepository) {}
+
+  async getUsers(): Promise<User[]> {
+    return this.userRepository.findAll();
+  }
+
+  async registerUser(userData: CreateUserDto): Promise<User> {
+    return this.userRepository.create(userData);
+  }
+}
+
+@Module({
+  providers: [UserService, UserRepository],
+  exports: [UserService],
+})
+export class UserModule {}
+```
+
+### Factory Pattern
+
+Use factory providers for complex initialization:
+
+```typescript
+@Module({
+  providers: [
+    {
+      provide: 'DATABASE',
+      useFactory: async (configService: ConfigService) => {
+        const config = configService.getDatabaseConfig();
+        const connection = await createConnection(config);
+        return connection;
+      },
+      inject: [ConfigService],
+    },
+  ],
+  exports: ['DATABASE'],
+})
+export class DatabaseModule {}
+```
+
+### Dependency Injection Pattern
+
+Leverage the built-in DI container:
+
+```typescript
+@Injectable()
+export class EmailService {
+  constructor(
+    private readonly loggerService: LoggerService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  async sendEmail(to: string, subject: string, body: string): Promise<void> {
+    this.loggerService.log(`Sending email to ${to}`);
+    const smtpConfig = this.configService.getSmtpConfig();
+    // Send email...
+  }
+}
+```
+
+## Testing Modules
+
+Modules are designed to be easily testable:
+
+```typescript
+import { describe, it, expect } from '@jest/globals';
+import { Application } from '@framework/core';
+import { UserModule } from './user.module.js';
+
+describe('UserModule', () => {
+  let app: Application;
+
+  beforeEach(async () => {
+    app = new Application();
+    await app.registerModule(UserModule);
+  });
+
+  it('should have UserController registered', () => {
+    const controllers = app.getControllers();
+    expect(controllers).toContainEqual(expect.any(UserController));
+  });
+
+  it('should have UserService available', () => {
+    const service = app.resolve(UserService);
+    expect(service).toBeDefined();
+  });
+});
+```
+
+## Summary
+
+Modules are the foundation of organized, maintainable @framework/core applications:
+
+- **Use modules** to group related code by feature or domain
+- **Declare dependencies** clearly with `imports` and `exports`
+- **Follow patterns** like feature modules, shared modules, and core modules
+- **Keep modules focused** on a single responsibility
+- **Use barrel exports** for clean public APIs
+- **Test modules** in isolation by mocking dependencies
+
+With a solid module structure, your application will be easier to develop, test, and scale. Start with small, focused feature modules and grow your architecture as your application evolves.

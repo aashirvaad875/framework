@@ -12,12 +12,14 @@ class ModuleLoader {
   private static loadedModules = new Set<Function>();
 
   static getMetadata(moduleClass: Function): ModuleConfig {
-    return Reflect.getMetadata(MODULE_METADATA_KEY, moduleClass) || {
-      controllers: [],
-      providers: [],
-      imports: [],
-      exports: [],
-    };
+    return (
+      Reflect.getMetadata(MODULE_METADATA_KEY, moduleClass) || {
+        controllers: [],
+        providers: [],
+        imports: [],
+        exports: [],
+      }
+    );
   }
 
   static async load(moduleClass: Function): Promise<void> {
@@ -38,7 +40,10 @@ class ModuleLoader {
     if (metadata.providers) {
       for (const provider of metadata.providers) {
         if (typeof provider === 'function') {
-          di.registerClass(provider as new (...args: any[]) => any, provider as new (...args: any[]) => any);
+          di.registerClass(
+            provider as new (...args: any[]) => any,
+            provider as new (...args: any[]) => any
+          );
         }
       }
     }
@@ -46,7 +51,10 @@ class ModuleLoader {
     // Register controllers
     if (metadata.controllers) {
       for (const controller of metadata.controllers) {
-        di.registerClass(controller as new (...args: any[]) => any, controller as new (...args: any[]) => any);
+        di.registerClass(
+          controller as new (...args: any[]) => any,
+          controller as new (...args: any[]) => any
+        );
       }
     }
 
@@ -81,4 +89,5 @@ export const Module = Object.assign(ModuleDecorator, {
   getProviders: ModuleLoader.getProviders.bind(ModuleLoader),
   getImports: ModuleLoader.getImports.bind(ModuleLoader),
   reset: ModuleLoader.reset.bind(ModuleLoader),
+  getLoadedModules: () => Array.from(ModuleLoader.loadedModules.values()),
 });

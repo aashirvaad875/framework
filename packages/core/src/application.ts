@@ -16,6 +16,8 @@ import { PluginManager } from './plugins/plugin.manager.js';
 import type { PluginManifest } from './plugins/types.js';
 import { OptimizationManager, defaultOptimizationConfig } from './optimization/index.js';
 import type { OptimizationConfig, Layer1, Layer2, Layer3 } from './optimization/index.js';
+import { DevTooling } from './dev/index.js';
+import type { DevToolingConfig } from './dev/index.js';
 import cors from 'cors';
 
 export interface ApplicationOptions {
@@ -25,6 +27,7 @@ export interface ApplicationOptions {
   globalMiddlewares?: RequestHandler[];
   globalErrorHandler?: ErrorRequestHandler;
   optimization?: OptimizationConfig | boolean;
+  devTooling?: DevToolingConfig | boolean;
 }
 
 export class Application {
@@ -42,6 +45,7 @@ export class Application {
   private pluginConfig: Record<string, Record<string, unknown>> = {};
   private optimizationManager?: OptimizationManager;
   private optimizationConfig?: OptimizationConfig;
+  private devTooling?: DevTooling;
   readonly container: Container;
   readonly eventBus: EventBus;
 
@@ -66,6 +70,17 @@ export class Application {
         this.optimizationConfig = undefined;
       } else {
         this.optimizationConfig = options.optimization;
+      }
+    }
+
+    // Configure dev tooling if in development or explicitly enabled
+    if (process.env.NODE_ENV === 'development' || options.devTooling !== undefined) {
+      if (options.devTooling === false) {
+        // Explicitly disabled
+      } else if (options.devTooling === true) {
+        this.devTooling = new DevTooling();
+      } else {
+        this.devTooling = new DevTooling(options.devTooling);
       }
     }
 
@@ -123,6 +138,12 @@ export class Application {
       await this.optimizationManager.initialize();
     }
 
+    // Initialize dev tooling if enabled
+    if (this.devTooling) {
+      await this.devTooling.initialize(this, this.pipeline);
+      this.logger.info('DevTooling initialized');
+    }
+
     if (this.globalErrorHandler) {
       this.adapter.useErrorHandler(this.globalErrorHandler);
     }
@@ -138,6 +159,11 @@ export class Application {
     // Shutdown optimization manager first if present
     if (this.optimizationManager) {
       await this.optimizationManager.shutdown();
+    }
+
+    // Shutdown dev tooling if present
+    if (this.devTooling) {
+      await this.devTooling.shutdown();
     }
 
     await this.lifecycle.runOnApplicationShutdown();
@@ -207,6 +233,10 @@ export class Application {
 
   getOptimizationManager(): OptimizationManager | undefined {
     return this.optimizationManager;
+  }
+
+  getDevTooling(): DevTooling | undefined {
+    return this.devTooling;
   }
 }
 

@@ -12,6 +12,14 @@
   "bin": {
     "framework": "./bin/framework.js"
   },
+  "files": [
+    "dist",
+    "bin",
+    "templates"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --outDir dist --dts",
     "dev": "node --loader tsx src/index.ts",

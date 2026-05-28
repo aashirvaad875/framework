@@ -14,6 +14,8 @@ import { Container } from './di/index.js';
 import { EventBus } from './events/index.js';
 import { PluginManager } from './plugins/plugin.manager.js';
 import type { PluginManifest } from './plugins/types.js';
+import { OptimizationManager, defaultOptimizationConfig } from './optimization/index.js';
+import type { OptimizationConfig, Layer1, Layer2, Layer3 } from './optimization/index.js';
 import cors from 'cors';
 
 export interface ApplicationOptions {
@@ -22,6 +24,7 @@ export interface ApplicationOptions {
   corsEnabled?: boolean;
   globalMiddlewares?: RequestHandler[];
   globalErrorHandler?: ErrorRequestHandler;
+  optimization?: OptimizationConfig | boolean;
 }
 
 export class Application {
@@ -37,6 +40,8 @@ export class Application {
   private globalErrorHandler?: ErrorRequestHandler;
   private pluginManager: PluginManager | null = null;
   private pluginConfig: Record<string, Record<string, unknown>> = {};
+  private optimizationManager?: OptimizationManager;
+  private optimizationConfig?: OptimizationConfig;
   readonly container: Container;
   readonly eventBus: EventBus;
 
@@ -52,6 +57,17 @@ export class Application {
     this.port = options.port || 3000;
     this.host = options.host || 'localhost';
     this.logger = new Logger('Application');
+
+    // Configure optimization if provided
+    if (options.optimization !== undefined) {
+      if (options.optimization === true) {
+        this.optimizationConfig = defaultOptimizationConfig();
+      } else if (options.optimization === false) {
+        this.optimizationConfig = undefined;
+      } else {
+        this.optimizationConfig = options.optimization;
+      }
+    }
 
     this.setupDefaultMiddleware(options);
   }
@@ -101,6 +117,12 @@ export class Application {
 
     await this.lifecycle.runOnApplicationBootstrap();
 
+    // Initialize optimization manager if config is set
+    if (this.optimizationConfig) {
+      this.optimizationManager = new OptimizationManager(this.optimizationConfig);
+      await this.optimizationManager.initialize();
+    }
+
     if (this.globalErrorHandler) {
       this.adapter.useErrorHandler(this.globalErrorHandler);
     }
@@ -113,6 +135,11 @@ export class Application {
   }
 
   async stop(): Promise<void> {
+    // Shutdown optimization manager first if present
+    if (this.optimizationManager) {
+      await this.optimizationManager.shutdown();
+    }
+
     await this.lifecycle.runOnApplicationShutdown();
     await this.adapter.close();
     this.logger.info('Server stopped');
@@ -156,6 +183,30 @@ export class Application {
 
   getPluginManager(): PluginManager | undefined {
     return this.pluginManager ?? undefined;
+  }
+
+  getOptimizationLayer(layer: 1): Layer1 | undefined;
+  getOptimizationLayer(layer: 2): Layer2 | undefined;
+  getOptimizationLayer(layer: 3): Layer3 | undefined;
+  getOptimizationLayer(layer: 1 | 2 | 3): Layer1 | Layer2 | Layer3 | undefined {
+    if (!this.optimizationManager) {
+      return undefined;
+    }
+
+    switch (layer) {
+      case 1:
+        return this.optimizationManager.layer1;
+      case 2:
+        return this.optimizationManager.layer2;
+      case 3:
+        return this.optimizationManager.layer3;
+      default:
+        return undefined;
+    }
+  }
+
+  getOptimizationManager(): OptimizationManager | undefined {
+    return this.optimizationManager;
   }
 }
 

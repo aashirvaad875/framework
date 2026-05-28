@@ -18,6 +18,10 @@ export class FileWatcher extends EventEmitter {
     this.running = false;
   }
 
+  /**
+   * Start watching directories for file changes.
+   * @param config - Watcher configuration (directories to watch, exclusions, debounce time)
+   */
   watch(config: WatcherConfig): void {
     if (!config.enabled) {
       return;
@@ -35,23 +39,32 @@ export class FileWatcher extends EventEmitter {
         continue; // Skip if already watching
       }
 
-      const watcher = watch(
+      const fsWatcher = watch(
         dir,
         { recursive: true },
         (eventType: string, filename: string | null) => {
           if (filename) {
-            this.handleFileChange(
-              filename,
-              eventType as 'add' | 'addDir' | 'change' | 'unlink' | 'unlinkDir'
-            );
+            // fs.watch emits 'change' or 'rename' events
+            // Map to our standard event type
+            const mappedEventType: FileChangeEvent['eventType'] = 'change';
+            this.handleFileChange(filename, mappedEventType);
           }
         }
       );
 
-      this.watchers.set(dir, watcher);
+      // Add error handler for watch failures
+      fsWatcher.on('error', error => {
+        this.emit('error', new Error(`Watch error in ${dir}: ${error.message}`));
+      });
+
+      this.watchers.set(dir, fsWatcher);
     }
   }
 
+  /**
+   * Stop watching all directories and clean up resources.
+   * Clears all timers and closes all file watchers.
+   */
   async stop(): Promise<void> {
     this.running = false;
 
@@ -86,11 +99,34 @@ export class FileWatcher extends EventEmitter {
   }
 
   private shouldExclude(filepath: string): boolean {
+    if (!filepath) {
+      return true;
+    }
+
+    // Always exclude these common patterns as exact path segments
+    const defaultExcludes = ['.git', 'node_modules'];
+    const filepathParts = filepath.split('/');
+
+    for (const exclude of defaultExcludes) {
+      // Match as complete path segment to avoid false positives
+      // e.g., '.git' matches '.git/' but not 'legit.git'
+      if (filepathParts.includes(exclude)) {
+        return true;
+      }
+    }
+
+    // Handle .map files (source maps) - match by extension
+    if (filepath.endsWith('.map')) {
+      return true;
+    }
+
+    // Check custom exclude patterns
     for (const pattern of this.excludePatterns) {
       if (this.matchesPattern(filepath, pattern)) {
         return true;
       }
     }
+
     return false;
   }
 
@@ -121,7 +157,25 @@ export class FileWatcher extends EventEmitter {
       }
     }
 
-    // Simple substring matching for exact pattern parts
+    // For simple patterns without wildcards, match as path segments
+    // Avoid too-broad substring matching (e.g., '.git' should not match 'legit.git')
+    const pathSegments = normalizedPath.split('/');
+    const patternSegments = normalizedPattern.split('/');
+
+    // Check if pattern appears as one or more complete path segments
+    for (const segment of patternSegments) {
+      if (!segment) {
+        continue;
+      } // Skip empty segments
+
+      const isExactMatch = pathSegments.includes(segment);
+      if (isExactMatch) {
+        return true;
+      }
+    }
+
+    // Fallback to substring matching only if no segments matched
+    // This handles patterns like "test" in "src/test/file.ts"
     return normalizedPath.includes(normalizedPattern);
   }
 

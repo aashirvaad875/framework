@@ -1,5 +1,11 @@
 import 'reflect-metadata';
-import { Application, initializeDatabase, closeDatabase, globalErrorHandler } from '@framework/core';
+import {
+  Application,
+  initializeDatabase,
+  closeDatabase,
+  globalErrorHandler,
+  defaultOptimizationConfig,
+} from '@framework/core';
 import { Logger } from '@framework/logger';
 import { databaseConfig } from './config/database.config.js';
 import { appConfig } from './config/app.config.js';
@@ -22,6 +28,13 @@ async function bootstrap(): Promise<void> {
       corsEnabled: appConfig.corsEnabled,
     });
 
+    // Configure optimization system with environment-based defaults
+    app.configure({
+      optimization: defaultOptimizationConfig(process.env.NODE_ENV, {
+        layer3: { enabled: process.env.ENABLE_PROFILING === 'true' },
+      }),
+    });
+
     // Register modules
     logger.info('Registering modules...');
     await app.registerModule(HealthModule);
@@ -33,6 +46,12 @@ async function bootstrap(): Promise<void> {
     // Start server
     logger.info(`Starting server on ${appConfig.host}:${appConfig.port}`);
     await app.start();
+
+    // Verify optimization system is active
+    const manager = app.getOptimizationManager();
+    if (manager) {
+      logger.info('[Optimization] Framework optimizations enabled');
+    }
   } catch (error) {
     logger.error('Bootstrap failed', error as Error);
     await closeDatabase();
@@ -53,4 +72,4 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-bootstrap();
+void bootstrap();

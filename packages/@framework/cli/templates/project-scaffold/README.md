@@ -1,4 +1,4 @@
-# **APP_NAME**
+# APP_NAME_PLACEHOLDER
 
 A REST API built with [@framework/core](https://github.com/your-org/framework).
 

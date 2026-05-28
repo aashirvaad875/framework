@@ -124,8 +124,12 @@ export class AppGenerator extends BaseGenerator {
         await this.replaceTokens(fullPath, appName);
       } else if (textExts.has(path.extname(entry.name))) {
         const content = await fs.readFile(fullPath, 'utf-8');
-        if (content.includes('__APP_NAME__')) {
-          await fs.writeFile(fullPath, content.replaceAll('__APP_NAME__', appName), 'utf-8');
+        if (content.includes('__APP_NAME__') || content.includes('APP_NAME_PLACEHOLDER')) {
+          await fs.writeFile(
+            fullPath,
+            content.replaceAll('__APP_NAME__', appName).replaceAll('APP_NAME_PLACEHOLDER', appName),
+            'utf-8'
+          );
         }
       }
     }

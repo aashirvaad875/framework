@@ -46,3 +46,4 @@ export * from './swagger/index.js';
 export * from './microservices/index.js';
 export * from './plugins/index.js';
 export * from './optimization/index.js';
+export * from './dev/index.js';

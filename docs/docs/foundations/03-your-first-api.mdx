@@ -1,0 +1,677 @@
+---
+title: Your First API
+description: Build a production-ready Todo API with @framework/core covering controllers, services, DTOs, and validation
+---
+
+# Your First API
+
+In this guide, we'll build a production-ready Todo API with proper architecture, including controllers, services, DTOs, and validation. This goes deeper than the quick start and shows how to structure real applications.
+
+## Project Setup
+
+Start with the installation from the previous guide:
+
+```bash
+mkdir todo-api
+cd todo-api
+npm install @framework/core express reflect-metadata
+npm install --save-dev typescript @types/express @types/node ts-node
+npx tsc --init  # Create tsconfig.json
+```
+
+Create your project structure:
+
+```bash
+mkdir -p src/{modules/todos/{controllers,services,dtos},common,config}
+```
+
+## Step 1: Define Data Models and DTOs
+
+Create `src/modules/todos/dtos/create-todo.dto.ts`:
+
+```typescript
+// Data Transfer Object for creating todos
+export interface CreateTodoDto {
+  title: string;
+  description?: string;
+  priority?: 'low' | 'medium' | 'high';
+}
+
+// Validation helper
+export function validateCreateTodoDto(data: any): CreateTodoDto {
+  if (!data.title || typeof data.title !== 'string') {
+    throw new Error('Title is required and must be a string');
+  }
+
+  if (data.title.length < 1 || data.title.length > 255) {
+    throw new Error('Title must be between 1 and 255 characters');
+  }
+
+  if (data.description && typeof data.description !== 'string') {
+    throw new Error('Description must be a string');
+  }
+
+  if (data.priority && !['low', 'medium', 'high'].includes(data.priority)) {
+    throw new Error('Priority must be one of: low, medium, high');
+  }
+
+  return {
+    title: data.title.trim(),
+    description: data.description?.trim(),
+    priority: data.priority || 'medium',
+  };
+}
+```
+
+Create `src/modules/todos/dtos/update-todo.dto.ts`:
+
+```typescript
+// Data Transfer Object for updating todos
+export interface UpdateTodoDto {
+  title?: string;
+  description?: string;
+  completed?: boolean;
+  priority?: 'low' | 'medium' | 'high';
+}
+
+export function validateUpdateTodoDto(data: any): UpdateTodoDto {
+  const updates: UpdateTodoDto = {};
+
+  if (data.title !== undefined) {
+    if (typeof data.title !== 'string') {
+      throw new Error('Title must be a string');
+    }
+    if (data.title.length < 1 || data.title.length > 255) {
+      throw new Error('Title must be between 1 and 255 characters');
+    }
+    updates.title = data.title.trim();
+  }
+
+  if (data.description !== undefined) {
+    if (typeof data.description !== 'string') {
+      throw new Error('Description must be a string');
+    }
+    updates.description = data.description.trim();
+  }
+
+  if (data.completed !== undefined) {
+    if (typeof data.completed !== 'boolean') {
+      throw new Error('Completed must be a boolean');
+    }
+    updates.completed = data.completed;
+  }
+
+  if (data.priority !== undefined) {
+    if (!['low', 'medium', 'high'].includes(data.priority)) {
+      throw new Error('Priority must be one of: low, medium, high');
+    }
+    updates.priority = data.priority;
+  }
+
+  return updates;
+}
+```
+
+Create `src/modules/todos/dtos/todo.dto.ts`:
+
+```typescript
+// Response DTO for todos
+export interface TodoDto {
+  id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+## Step 2: Create a Service Layer
+
+Create `src/modules/todos/services/todo.service.ts`:
+
+```typescript
+import { CreateTodoDto } from '../dtos/create-todo.dto.js';
+import { UpdateTodoDto } from '../dtos/update-todo.dto.js';
+import { TodoDto } from '../dtos/todo.dto.js';
+import { Injectable } from '@framework/core';
+
+// In-memory storage (replace with database in production)
+interface TodoRecord extends TodoDto {
+  id: string;
+}
+
+const todos: Map<string, TodoRecord> = new Map();
+let nextId = 1;
+
+@Injectable()
+export class TodoService {
+  createTodo(dto: CreateTodoDto): TodoDto {
+    const id = String(nextId++);
+    const now = new Date();
+
+    const todo: TodoRecord = {
+      id,
+      ...dto,
+      completed: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    todos.set(id, todo);
+    return this.toDto(todo);
+  }
+
+  getTodoById(id: string): TodoDto | null {
+    const todo = todos.get(id);
+    return todo ? this.toDto(todo) : null;
+  }
+
+  getAllTodos(limit: number = 10, offset: number = 0): { data: TodoDto[]; total: number } {
+    const allTodos = Array.from(todos.values());
+    const total = allTodos.length;
+
+    const data = allTodos.slice(offset, offset + limit).map((todo) => this.toDto(todo));
+
+    return { data, total };
+  }
+
+  getTodosByPriority(priority: string): TodoDto[] {
+    return Array.from(todos.values())
+      .filter((todo) => todo.priority === priority)
+      .map((todo) => this.toDto(todo));
+  }
+
+  updateTodo(id: string, dto: UpdateTodoDto): TodoDto | null {
+    const todo = todos.get(id);
+    if (!todo) {
+      return null;
+    }
+
+    const updated: TodoRecord = {
+      ...todo,
+      ...dto,
+      id: todo.id,
+      createdAt: todo.createdAt,
+      updatedAt: new Date(),
+    };
+
+    todos.set(id, updated);
+    return this.toDto(updated);
+  }
+
+  deleteTodo(id: string): boolean {
+    return todos.delete(id);
+  }
+
+  markCompleted(id: string): TodoDto | null {
+    return this.updateTodo(id, { completed: true });
+  }
+
+  clearCompleted(): number {
+    const before = todos.size;
+    Array.from(todos.entries()).forEach(([key, todo]) => {
+      if (todo.completed) {
+        todos.delete(key);
+      }
+    });
+    return before - todos.size;
+  }
+
+  private toDto(record: TodoRecord): TodoDto {
+    return {
+      id: record.id,
+      title: record.title,
+      description: record.description,
+      completed: record.completed,
+      priority: record.priority,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    };
+  }
+}
+```
+
+## Step 3: Create the Controller
+
+Create `src/modules/todos/controllers/todo.controller.ts`:
+
+```typescript
+import { Request, Response } from 'express';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Inject } from '@framework/core';
+import { TodoService } from '../services/todo.service.js';
+import { validateCreateTodoDto } from '../dtos/create-todo.dto.js';
+import { validateUpdateTodoDto } from '../dtos/update-todo.dto.js';
+
+@Controller('/api/todos')
+export class TodoController {
+  constructor(@Inject() private todoService: TodoService) {}
+
+  /**
+   * GET /api/todos
+   * Get all todos with pagination
+   */
+  @Get()
+  getAllTodos(req: Request, res: Response): void {
+    try {
+      const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      if (limit < 1 || offset < 0) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid pagination parameters',
+        });
+        return;
+      }
+
+      const result = this.todoService.getAllTodos(limit, offset);
+
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        pagination: {
+          limit,
+          offset,
+          total: result.total,
+        },
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * GET /api/todos/:id
+   * Get a specific todo by ID
+   */
+  @Get('/:id')
+  getTodoById(@Param('id') id: string, req: Request, res: Response): void {
+    try {
+      const todo = this.todoService.getTodoById(id);
+
+      if (!todo) {
+        res.status(404).json({
+          success: false,
+          error: 'Todo not found',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: todo,
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * GET /api/todos/priority/:priority
+   * Get todos by priority level
+   */
+  @Get('/priority/:priority')
+  getTodosByPriority(@Param('priority') priority: string, req: Request, res: Response): void {
+    try {
+      if (!['low', 'medium', 'high'].includes(priority)) {
+        res.status(400).json({
+          success: false,
+          error: 'Priority must be one of: low, medium, high',
+        });
+        return;
+      }
+
+      const todos = this.todoService.getTodosByPriority(priority);
+
+      res.status(200).json({
+        success: true,
+        data: todos,
+        count: todos.length,
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * POST /api/todos
+   * Create a new todo
+   */
+  @Post()
+  createTodo(@Body() body: any, req: Request, res: Response): void {
+    try {
+      const dto = validateCreateTodoDto(body);
+      const todo = this.todoService.createTodo(dto);
+
+      res.status(201).json({
+        success: true,
+        data: todo,
+        message: 'Todo created successfully',
+      });
+    } catch (error) {
+      this.handleError(error, res, 400);
+    }
+  }
+
+  /**
+   * PUT /api/todos/:id
+   * Update an existing todo
+   */
+  @Put('/:id')
+  updateTodo(@Param('id') id: string, @Body() body: any, req: Request, res: Response): void {
+    try {
+      const dto = validateUpdateTodoDto(body);
+      const todo = this.todoService.updateTodo(id, dto);
+
+      if (!todo) {
+        res.status(404).json({
+          success: false,
+          error: 'Todo not found',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: todo,
+        message: 'Todo updated successfully',
+      });
+    } catch (error) {
+      this.handleError(error, res, 400);
+    }
+  }
+
+  /**
+   * DELETE /api/todos/:id
+   * Delete a todo
+   */
+  @Delete('/:id')
+  deleteTodo(@Param('id') id: string, req: Request, res: Response): void {
+    try {
+      const deleted = this.todoService.deleteTodo(id);
+
+      if (!deleted) {
+        res.status(404).json({
+          success: false,
+          error: 'Todo not found',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Todo deleted successfully',
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * POST /api/todos/:id/complete
+   * Mark a todo as completed
+   */
+  @Post('/:id/complete')
+  completeTodo(@Param('id') id: string, req: Request, res: Response): void {
+    try {
+      const todo = this.todoService.markCompleted(id);
+
+      if (!todo) {
+        res.status(404).json({
+          success: false,
+          error: 'Todo not found',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: todo,
+        message: 'Todo marked as completed',
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * DELETE /api/todos/completed
+   * Clear all completed todos
+   */
+  @Delete('/completed/all')
+  clearCompleted(req: Request, res: Response): void {
+    try {
+      const count = this.todoService.clearCompleted();
+
+      res.status(200).json({
+        success: true,
+        message: `Cleared ${count} completed todos`,
+        cleared: count,
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * Error handling utility
+   */
+  private handleError(error: any, res: Response, statusCode: number = 500): void {
+    console.error('Error:', error);
+
+    const message = error instanceof Error ? error.message : 'Internal server error';
+
+    res.status(statusCode).json({
+      success: false,
+      error: message,
+    });
+  }
+}
+```
+
+## Step 4: Create a Module
+
+Create `src/modules/todos/todo.module.ts`:
+
+```typescript
+import { Module } from '@framework/core';
+import { TodoController } from './controllers/todo.controller.js';
+import { TodoService } from './services/todo.service.js';
+
+@Module({
+  controllers: [TodoController],
+  providers: [TodoService],
+})
+export class TodoModule {}
+```
+
+## Step 5: Bootstrap the Application
+
+Create `src/main.ts`:
+
+```typescript
+import 'reflect-metadata';
+import { Application } from '@framework/core';
+import { TodoModule } from './modules/todos/todo.module.js';
+
+async function bootstrap(): Promise<void> {
+  try {
+    const app = new Application({
+      port: 3000,
+      host: 'localhost',
+      corsEnabled: true,
+    });
+
+    console.log('📦 Registering modules...');
+    await app.registerModule(TodoModule);
+
+    console.log('🚀 Starting server...');
+    await app.start();
+  } catch (error) {
+    console.error('❌ Bootstrap failed:', error);
+    process.exit(1);
+  }
+}
+
+bootstrap();
+```
+
+## Step 6: Run Your API
+
+Update `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "ts-node src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js"
+  }
+}
+```
+
+Start the server:
+
+```bash
+npm run dev
+```
+
+## Step 7: Test Your API
+
+### Create a Todo
+
+```bash
+curl -X POST http://localhost:3000/api/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Learn @framework/core",
+    "description": "Build production APIs",
+    "priority": "high"
+  }'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "title": "Learn @framework/core",
+    "description": "Build production APIs",
+    "completed": false,
+    "priority": "high",
+    "createdAt": "2024-05-28T10:00:00.000Z",
+    "updatedAt": "2024-05-28T10:00:00.000Z"
+  },
+  "message": "Todo created successfully"
+}
+```
+
+### Get All Todos
+
+```bash
+curl http://localhost:3000/api/todos
+```
+
+### Get Todo by ID
+
+```bash
+curl http://localhost:3000/api/todos/1
+```
+
+### Get by Priority
+
+```bash
+curl http://localhost:3000/api/todos/priority/high
+```
+
+### Update a Todo
+
+```bash
+curl -X PUT http://localhost:3000/api/todos/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Master @framework/core",
+    "completed": false
+  }'
+```
+
+### Mark as Completed
+
+```bash
+curl -X POST http://localhost:3000/api/todos/1/complete \
+  -H "Content-Type: application/json"
+```
+
+### Delete a Todo
+
+```bash
+curl -X DELETE http://localhost:3000/api/todos/1
+```
+
+## Common Issues and Solutions
+
+### Issue: "Cannot find module" error
+
+**Solution**: Ensure imports use `.js` extension:
+
+```typescript
+import { TodoModule } from './modules/todos/todo.module.js';  // ✅ Correct
+```
+
+### Issue: Validation not working
+
+**Solution**: Call validation functions in your controller before passing to service:
+
+```typescript
+const dto = validateCreateTodoDto(body);  // ✅ Validate first
+const todo = this.todoService.createTodo(dto);
+```
+
+### Issue: Service not injected
+
+**Solution**: Add `@Injectable()` decorator to service:
+
+```typescript
+@Injectable()
+export class TodoService {
+  // ...
+}
+```
+
+### Issue: TypeScript compilation errors
+
+**Solution**: Ensure `experimentalDecorators` is enabled:
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
+```
+
+## Next Steps
+
+Your Todo API is now complete! Continue learning:
+
+1. **[Project Structure](./04-project-structure.mdx)** - Organize code at scale
+2. **[Architecture Overview](./05-architecture-overview.mdx)** - Understand the framework
+3. **[Request Lifecycle](./06-request-lifecycle.mdx)** - Deep dive into request handling
+
+## Summary
+
+You've built a production-ready API with:
+
+- ✅ Proper separation of concerns (Controller → Service)
+- ✅ Data validation with DTOs
+- ✅ Error handling
+- ✅ Pagination support
+- ✅ Full CRUD operations
+- ✅ Additional business logic (filter by priority, mark complete)
+
+This architecture scales well to complex applications with databases, authentication, and multiple modules.

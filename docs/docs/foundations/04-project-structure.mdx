@@ -1,0 +1,560 @@
+---
+title: Project Structure
+description: Recommended directory structure for @framework/core applications at any scale
+---
+
+# Project Structure
+
+A well-organized project structure is essential for maintainability, scalability, and team collaboration. This guide covers recommended layouts for @framework/core applications.
+
+## Standard Project Structure
+
+Here's the recommended structure for a typical @framework/core application:
+
+```
+my-app/
+├── src/
+│   ├── main.ts                          # Application entry point
+│   ├── app.module.ts                    # Root application module
+│   ├── modules/                         # Feature modules
+│   │   ├── users/
+│   │   │   ├── user.module.ts          # Module definition
+│   │   │   ├── controllers/
+│   │   │   │   └── user.controller.ts
+│   │   │   ├── services/
+│   │   │   │   ├── user.service.ts
+│   │   │   │   └── user-auth.service.ts
+│   │   │   ├── dtos/
+│   │   │   │   ├── create-user.dto.ts
+│   │   │   │   ├── update-user.dto.ts
+│   │   │   │   └── user-response.dto.ts
+│   │   │   ├── repositories/
+│   │   │   │   └── user.repository.ts
+│   │   │   ├── entities/
+│   │   │   │   └── user.entity.ts
+│   │   │   ├── interfaces/
+│   │   │   │   └── user.interface.ts
+│   │   │   └── __tests__/
+│   │   │       ├── user.controller.test.ts
+│   │   │       └── user.service.test.ts
+│   │   ├── posts/
+│   │   │   ├── post.module.ts
+│   │   │   ├── controllers/
+│   │   │   ├── services/
+│   │   │   ├── dtos/
+│   │   │   └── __tests__/
+│   │   └── auth/
+│   │       ├── auth.module.ts
+│   │       ├── controllers/
+│   │       ├── services/
+│   │       ├── guards/
+│   │       ├── strategies/
+│   │       └── __tests__/
+│   ├── common/
+│   │   ├── middleware/
+│   │   │   ├── logger.middleware.ts
+│   │   │   ├── error-handler.middleware.ts
+│   │   │   └── request-id.middleware.ts
+│   │   ├── guards/
+│   │   │   ├── auth.guard.ts
+│   │   │   └── role.guard.ts
+│   │   ├── pipes/
+│   │   │   ├── validation.pipe.ts
+│   │   │   └── transform.pipe.ts
+│   │   ├── interceptors/
+│   │   │   ├── logging.interceptor.ts
+│   │   │   └── response.interceptor.ts
+│   │   ├── decorators/
+│   │   │   ├── is-public.decorator.ts
+│   │   │   └── roles.decorator.ts
+│   │   ├── exceptions/
+│   │   │   ├── http.exception.ts
+│   │   │   ├── not-found.exception.ts
+│   │   │   └── unauthorized.exception.ts
+│   │   ├── filters/
+│   │   │   └── exception.filter.ts
+│   │   └── logger.ts
+│   ├── config/
+│   │   ├── app.config.ts
+│   │   ├── database.config.ts
+│   │   ├── auth.config.ts
+│   │   └── env.ts
+│   ├── database/
+│   │   ├── migrations/
+│   │   │   ├── 1000000001-CreateUsersTable.ts
+│   │   │   └── 1000000002-CreatePostsTable.ts
+│   │   ├── seeders/
+│   │   │   ├── user.seeder.ts
+│   │   │   └── post.seeder.ts
+│   │   └── database.ts
+│   ├── types/
+│   │   ├── express.ts
+│   │   ├── index.ts
+│   │   └── user.types.ts
+│   └── utils/
+│       ├── string.utils.ts
+│       ├── date.utils.ts
+│       └── validation.utils.ts
+├── dist/                                 # Compiled output
+├── test/
+│   ├── fixtures/                        # Test data
+│   ├── mocks/                           # Mock implementations
+│   └── setup.ts                         # Test configuration
+├── .env.example                         # Environment variable template
+├── .env                                 # Local environment (git ignored)
+├── .eslintrc.json                       # ESLint configuration
+├── .prettierrc.json                     # Prettier configuration
+├── tsconfig.json                        # TypeScript configuration
+├── vitest.config.ts                     # Vitest configuration
+├── package.json
+├── README.md
+└── .gitignore
+```
+
+## File Organization Principles
+
+### 1. Feature-Based Organization (Recommended)
+
+Organize code around features/domains:
+
+**Pros:**
+- Easy to find all code related to a feature
+- Simple to extract features into separate modules
+- Clear feature boundaries
+- Better for team collaboration
+
+**Structure:**
+
+```
+src/modules/
+├── users/           # Users feature
+├── posts/           # Posts feature
+├── comments/        # Comments feature
+└── auth/            # Authentication feature
+```
+
+### 2. Layer-Based Organization
+
+Organize code by technical layers (alternative):
+
+**Pros:**
+- Clear separation of concerns
+- Easy to understand technical architecture
+- Good for shared utilities
+
+**Structure:**
+
+```
+src/
+├── controllers/
+├── services/
+├── repositories/
+├── pipes/
+├── guards/
+└── dtos/
+```
+
+### Combined Approach (Best for Large Apps)
+
+Use feature-based organization at the top level with layer-based organization within each feature:
+
+```
+src/modules/
+├── users/
+│   ├── controllers/
+│   ├── services/
+│   ├── repositories/
+│   ├── dtos/
+│   └── entities/
+└── posts/
+    ├── controllers/
+    ├── services/
+    └── dtos/
+
+src/common/              # Shared code
+├── guards/
+├── pipes/
+├── decorators/
+└── middleware/
+```
+
+## src/ Directory Breakdown
+
+### modules/
+
+Contains feature modules. Each module should:
+
+- Have a `<feature>.module.ts` file
+- Export controllers and services
+- Be independently testable
+- Define its own dependencies
+
+**module.ts structure:**
+
+```typescript
+import { Module } from '@framework/core';
+import { UserController } from './controllers/user.controller.js';
+import { UserService } from './services/user.service.js';
+import { UserRepository } from './repositories/user.repository.js';
+
+@Module({
+  controllers: [UserController],
+  providers: [UserService, UserRepository],
+})
+export class UserModule {}
+```
+
+### common/
+
+Shared code used across modules:
+
+- **middleware/** - Request processing middleware
+- **guards/** - Route protection guards
+- **pipes/** - Data transformation and validation
+- **decorators/** - Custom decorators
+- **exceptions/** - Custom exception classes
+- **filters/** - Exception filters
+- **logger.ts** - Logging utility
+
+### config/
+
+Application configuration files:
+
+```typescript
+// config/app.config.ts
+export const appConfig = {
+  port: process.env.PORT || 3000,
+  host: process.env.HOST || 'localhost',
+  environment: process.env.NODE_ENV || 'development',
+};
+
+// config/database.config.ts
+export const databaseConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'myapp',
+};
+```
+
+### database/
+
+Database-related code:
+
+```
+database/
+├── migrations/     # Schema changes
+├── seeders/        # Initial data
+├── database.ts     # Connection management
+└── entities/       # Database entities
+```
+
+### types/
+
+TypeScript type definitions and interfaces:
+
+```typescript
+// types/express.ts
+import { Request } from 'express';
+
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+      user?: any;
+      requestId?: string;
+    }
+  }
+}
+
+// types/user.types.ts
+export interface IUser {
+  id: string;
+  email: string;
+  name: string;
+}
+```
+
+### utils/
+
+Utility functions:
+
+```typescript
+// utils/string.utils.ts
+export function slugify(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// utils/validation.utils.ts
+export function isValidEmail(email: string): boolean {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+```
+
+## dist/ Directory
+
+Output directory after compilation:
+
+```
+dist/
+├── main.js
+├── modules/
+│   ├── users/
+│   ├── posts/
+│   └── auth/
+├── common/
+├── config/
+└── types/
+```
+
+Build with:
+
+```bash
+npm run build
+```
+
+## test/ Directory
+
+Test files and fixtures:
+
+```
+test/
+├── __tests__/                    # Test files
+│   ├── modules/
+│   │   └── users/
+│   │       ├── user.controller.test.ts
+│   │       └── user.service.test.ts
+│   └── common/
+│       └── logger.test.ts
+├── fixtures/                     # Test data
+│   ├── users.fixture.ts
+│   └── posts.fixture.ts
+├── mocks/                        # Mock implementations
+│   ├── user.repository.mock.ts
+│   └── user.service.mock.ts
+└── setup.ts                      # Test configuration
+```
+
+Run tests:
+
+```bash
+npm test
+npm run test:coverage
+```
+
+## Monorepo Structure
+
+For larger projects with multiple apps/packages:
+
+```
+monorepo/
+├── packages/
+│   ├── core/
+│   │   ├── src/
+│   │   ├── dist/
+│   │   └── package.json
+│   ├── api/
+│   │   ├── src/
+│   │   ├── dist/
+│   │   └── package.json
+│   └── cli/
+│       ├── src/
+│       ├── dist/
+│       └── package.json
+├── apps/
+│   ├── web/
+│   └── admin/
+├── tools/
+│   └── scripts/
+├── tsconfig.json             # Root tsconfig
+├── turbo.json               # Monorepo config
+├── pnpm-workspace.yaml      # Workspace definition
+└── package.json
+```
+
+**pnpm-workspace.yaml:**
+
+```yaml
+packages:
+  - 'packages/*'
+  - 'apps/*'
+```
+
+**turbo.json:**
+
+```json
+{
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "test": {
+      "outputs": ["coverage/**"]
+    },
+    "lint": {
+      "outputs": []
+    }
+  }
+}
+```
+
+## Configuration Files
+
+### tsconfig.json
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@modules/*": ["src/modules/*"],
+      "@common/*": ["src/common/*"],
+      "@config/*": ["src/config/*"]
+    }
+  }
+}
+```
+
+### package.json Scripts
+
+```json
+{
+  "scripts": {
+    "dev": "ts-node src/main.ts",
+    "dev:watch": "ts-node --watch src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
+  }
+}
+```
+
+## Naming Conventions
+
+Follow these naming conventions:
+
+| Type | Format | Example |
+|---|---|---|
+| Files | `kebab-case` | `user.controller.ts` |
+| Classes | `PascalCase` | `UserController` |
+| Functions | `camelCase` | `getUserById()` |
+| Constants | `SCREAMING_SNAKE_CASE` | `MAX_CONNECTIONS` |
+| Interfaces | `PascalCase` with `I` prefix | `IUserRepository` |
+| Decorators | `camelCase` | `@Controller()` |
+| Modules | `PascalCase` | `UserModule` |
+
+## Best Practices
+
+### 1. Keep Modules Focused
+
+Each module should handle one domain:
+
+```
+users/          ✅ Single responsibility
+├── controllers/
+├── services/
+└── dtos/
+
+user-auth-posts/  ❌ Too many responsibilities
+```
+
+### 2. Use Path Aliases
+
+Configure in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@modules/*": ["src/modules/*"],
+      "@common/*": ["src/common/*"]
+    }
+  }
+}
+```
+
+Use in code:
+
+```typescript
+import { UserService } from '@modules/users/services/user.service.js';
+import { Logger } from '@common/logger.js';
+```
+
+### 3. Organize Tests Near Source
+
+Keep tests close to the code they test:
+
+```
+users/
+├── user.controller.ts
+├── user.controller.test.ts
+├── user.service.ts
+└── user.service.test.ts
+```
+
+### 4. Share Code Properly
+
+Put shared code in `common/` or separate utility modules:
+
+```
+common/
+├── middleware/
+├── guards/
+├── pipes/
+└── decorators/
+```
+
+### 5. Maintain Separation of Concerns
+
+```
+Controller  → Service → Repository → Database
+   ↓            ↓           ↓
+ Routes     Business   Data Access
+ Params     Logic      Queries
+ Validation
+```
+
+## Next Steps
+
+Now that you understand the project structure, continue learning:
+
+1. **[Architecture Overview](./05-architecture-overview.mdx)** - How the framework components work together
+2. **[Request Lifecycle](./06-request-lifecycle.mdx)** - How requests flow through your application
+
+## Summary
+
+A good project structure:
+
+- ✅ Is easy to navigate
+- ✅ Separates concerns clearly
+- ✅ Scales with your application
+- ✅ Makes testing straightforward
+- ✅ Facilitates team collaboration
+- ✅ Supports code reuse
+
+Start with the standard structure and adapt as your project grows.

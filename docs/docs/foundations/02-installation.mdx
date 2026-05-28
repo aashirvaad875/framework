@@ -1,0 +1,494 @@
+---
+title: Installation & Setup
+description: Complete installation guide for @framework/core with TypeScript configuration and optional tools
+---
+
+# Installation & Setup
+
+This guide covers everything you need to install and configure @framework/core for development and production.
+
+## System Requirements
+
+Before installing, verify your system meets the requirements:
+
+| Requirement | Minimum | Recommended |
+|---|---|---|
+| **Node.js** | 18.0.0 | 20.x or 22.x |
+| **npm** | 9.0.0 | Latest |
+| **pnpm** | 8.0.0 | 9.x+ |
+| **yarn** | 3.0.0 | Latest |
+| **TypeScript** | 4.7.0 | 5.2.2+ |
+
+Check your current versions:
+
+```bash
+node --version
+npm --version
+npm list typescript  # if already installed
+```
+
+## Installation Methods
+
+### Option 1: Using npm (Recommended)
+
+```bash
+npm install @framework/core express reflect-metadata
+```
+
+### Option 2: Using pnpm
+
+```bash
+pnpm add @framework/core express reflect-metadata
+```
+
+### Option 3: Using yarn
+
+```bash
+yarn add @framework/core express reflect-metadata
+```
+
+## TypeScript Configuration
+
+### Basic TypeScript Setup
+
+Install TypeScript and type definitions:
+
+```bash
+npm install --save-dev typescript @types/express @types/node
+```
+
+### Create tsconfig.json
+
+Create a `tsconfig.json` at your project root:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020"],
+    "moduleResolution": "bundler",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
+```
+
+**Key settings for @framework/core:**
+
+- `experimentalDecorators: true` - Enables TypeScript decorator support
+- `emitDecoratorMetadata: true` - Emits metadata for dependency injection
+- `moduleResolution: "bundler"` - Modern module resolution
+
+## Project Structure Template
+
+Create your project with this recommended structure:
+
+```
+my-app/
+├── src/
+│   ├── main.ts                 # Application entry point
+│   ├── app.config.ts           # Application configuration
+│   ├── modules/
+│   │   ├── users/
+│   │   │   ├── user.module.ts
+│   │   │   ├── controllers/
+│   │   │   │   └── user.controller.ts
+│   │   │   ├── services/
+│   │   │   │   └── user.service.ts
+│   │   │   ├── dtos/
+│   │   │   │   └── create-user.dto.ts
+│   │   │   └── repositories/
+│   │   │       └── user.repository.ts
+│   │   └── posts/
+│   │       ├── post.module.ts
+│   │       ├── controllers/
+│   │       │   └── post.controller.ts
+│   │       └── services/
+│   │           └── post.service.ts
+│   ├── common/
+│   │   ├── middleware/
+│   │   ├── guards/
+│   │   ├── pipes/
+│   │   ├── interceptors/
+│   │   └── logger.ts
+│   ├── config/
+│   │   ├── database.config.ts
+│   │   ├── app.config.ts
+│   │   └── env.ts
+│   └── types/
+│       └── index.ts
+├── dist/                       # Compiled output
+├── test/                       # Test files
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+### Create Initial Files
+
+**package.json** base template:
+
+```json
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "description": "My awesome API",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "ts-node src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@framework/core": "latest",
+    "express": "^4.18.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.2.2"
+  }
+}
+```
+
+**src/main.ts** entry point:
+
+```typescript
+import 'reflect-metadata';
+import { Application } from '@framework/core';
+import { AppModule } from './modules/app.module.js';
+
+async function bootstrap(): Promise<void> {
+  try {
+    const app = new Application({
+      port: process.env.PORT ? parseInt(process.env.PORT) : 3000,
+      host: process.env.HOST || 'localhost',
+    });
+
+    await app.registerModule(AppModule);
+    await app.start();
+  } catch (error) {
+    console.error('Bootstrap failed:', error);
+    process.exit(1);
+  }
+}
+
+bootstrap();
+```
+
+## Optional Tools Setup
+
+### Option 1: ts-node (Development)
+
+Run TypeScript directly without compilation:
+
+```bash
+npm install --save-dev ts-node
+```
+
+Update `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "ts-node src/main.ts",
+    "dev:watch": "ts-node --watch src/main.ts"
+  }
+}
+```
+
+Create `tsconfig.json` with ts-node configuration:
+
+```json
+{
+  "ts-node": {
+    "esm": true,
+    "experimentalEsm": true,
+    "skipLibCheck": true
+  }
+}
+```
+
+### Option 2: Vitest (Testing)
+
+Install testing framework:
+
+```bash
+npm install --save-dev vitest @vitest/ui @testing-library/node
+```
+
+Create `vitest.config.ts`:
+
+```typescript
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+    globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
+  },
+});
+```
+
+Update `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
+  }
+}
+```
+
+### Option 3: ESLint (Code Quality)
+
+Install and configure ESLint:
+
+```bash
+npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
+```
+
+Create `.eslintrc.json`:
+
+```json
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "env": {
+    "node": true,
+    "es2020": true
+  },
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+  }
+}
+```
+
+Update `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  }
+}
+```
+
+### Option 4: Prettier (Code Formatting)
+
+```bash
+npm install --save-dev prettier
+```
+
+Create `.prettierrc.json`:
+
+```json
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 100,
+  "tabWidth": 2
+}
+```
+
+Update `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
+  }
+}
+```
+
+## Environment Configuration
+
+Create `.env.example`:
+
+```bash
+# Server
+NODE_ENV=development
+PORT=3000
+HOST=localhost
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=myapp
+DB_USER=user
+DB_PASSWORD=password
+
+# Logging
+LOG_LEVEL=debug
+```
+
+Create `.env` (local development):
+
+```bash
+NODE_ENV=development
+PORT=3000
+HOST=localhost
+```
+
+## Verification Test Script
+
+Create `src/__tests__/setup.test.ts` to verify your installation:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { Application } from '@framework/core';
+import { Controller, Get } from '@framework/core';
+import { Request, Response } from 'express';
+
+@Controller('/test')
+class TestController {
+  @Get('/health')
+  health(req: Request, res: Response): void {
+    res.status(200).json({ status: 'ok' });
+  }
+}
+
+describe('Framework Installation', () => {
+  it('should create an application instance', () => {
+    const app = new Application({ port: 3001 });
+    expect(app).toBeDefined();
+  });
+
+  it('should instantiate a controller', () => {
+    const controller = new TestController();
+    expect(controller).toBeDefined();
+  });
+
+  it('should have decorators applied', () => {
+    const metadata = Reflect.getMetadata('controller:metadata', TestController);
+    expect(metadata).toBeDefined();
+  });
+});
+```
+
+Run the verification:
+
+```bash
+npm test
+```
+
+## Environment Variables
+
+Create a config loader (`src/config/env.ts`):
+
+```typescript
+import { config } from 'dotenv';
+
+config();
+
+export const env = {
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  PORT: parseInt(process.env.PORT || '3000'),
+  HOST: process.env.HOST || 'localhost',
+  DB_HOST: process.env.DB_HOST || 'localhost',
+  DB_PORT: parseInt(process.env.DB_PORT || '5432'),
+  DB_NAME: process.env.DB_NAME || 'myapp',
+  LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+};
+```
+
+## Build Configuration
+
+Create a build script for production:
+
+```bash
+# Build TypeScript
+npm run build
+
+# Start compiled application
+npm start
+```
+
+The compiled output will be in the `dist/` directory.
+
+## Next Steps
+
+Now that you have @framework/core installed and configured, proceed to:
+
+1. **[Getting Started](./01-getting-started.mdx)** - 30-minute quick start guide
+2. **[Your First API](./03-your-first-api.mdx)** - Build your first production API
+3. **[Project Structure](./04-project-structure.mdx)** - Organize your code effectively
+
+## Troubleshooting
+
+### Port already in use
+
+Change the port in your configuration:
+
+```typescript
+new Application({ port: 3001 })
+```
+
+### Module resolution issues
+
+Ensure `moduleResolution` is set correctly in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler"
+  }
+}
+```
+
+### Decorator errors
+
+Enable experimental decorators in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
+```
+
+### Out of memory during compilation
+
+Increase Node memory:
+
+```bash
+node --max-old-space-size=4096 node_modules/.bin/tsc
+```

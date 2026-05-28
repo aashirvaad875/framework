@@ -1,0 +1,382 @@
+---
+title: Getting Started
+description: Get up and running with @framework/core in 30 minutes by building your first Todo API
+---
+
+# Getting Started with @framework/core
+
+Welcome! This guide will walk you through building your first API with @framework/core in about 30 minutes. By the end, you'll have a working Todo API that demonstrates the core framework features.
+
+## Prerequisites
+
+Before you start, make sure you have:
+
+- **Node.js 18.0.0 or higher** - [Download here](https://nodejs.org/)
+- **npm, yarn, or pnpm** - npm comes with Node.js
+- **Basic TypeScript knowledge** - You should understand TypeScript basics like types, interfaces, and classes
+- **Familiarity with HTTP/REST** - Basic understanding of GET, POST, PUT, DELETE requests
+
+Check your Node version:
+
+```bash
+node --version  # Should be v18.0.0 or higher
+```
+
+## Step 1: Create a New Project
+
+Create a new directory for your project:
+
+```bash
+mkdir my-first-api
+cd my-first-api
+```
+
+Initialize a Node.js project:
+
+```bash
+npm init -y
+```
+
+## Step 2: Install @framework/core
+
+Install the framework and required dependencies:
+
+```bash
+npm install @framework/core express reflect-metadata
+npm install --save-dev typescript @types/node @types/express ts-node
+```
+
+Create a `tsconfig.json` configuration file:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020"],
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
+```
+
+## Step 3: Create Project Structure
+
+Create the basic project structure:
+
+```bash
+mkdir -p src
+```
+
+## Step 4: Create Your First Controller
+
+Create `src/todo.controller.ts`:
+
+```typescript
+import { Request, Response } from 'express';
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@framework/core';
+
+// In-memory storage for this example
+const todos: Map<number, any> = new Map([
+  [1, { id: 1, title: 'Learn @framework/core', completed: false }],
+  [2, { id: 2, title: 'Build an API', completed: false }],
+]);
+
+let nextId = 3;
+
+@Controller('/api/todos')
+export class TodoController {
+  @Get()
+  getAllTodos(req: Request, res: Response): void {
+    const todoList = Array.from(todos.values());
+    res.status(200).json({
+      success: true,
+      data: todoList,
+      count: todoList.length,
+    });
+  }
+
+  @Get('/:id')
+  getTodoById(@Param('id') id: string, req: Request, res: Response): void {
+    const todoId = parseInt(id, 10);
+    const todo = todos.get(todoId);
+
+    if (!todo) {
+      res.status(404).json({
+        success: false,
+        error: 'Todo not found',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: todo,
+    });
+  }
+
+  @Post()
+  createTodo(@Body() body: any, req: Request, res: Response): void {
+    if (!body.title || body.title.trim() === '') {
+      res.status(400).json({
+        success: false,
+        error: 'Title is required',
+      });
+      return;
+    }
+
+    const newTodo = {
+      id: nextId++,
+      title: body.title,
+      completed: false,
+    };
+
+    todos.set(newTodo.id, newTodo);
+
+    res.status(201).json({
+      success: true,
+      data: newTodo,
+      message: 'Todo created successfully',
+    });
+  }
+
+  @Put('/:id')
+  updateTodo(@Param('id') id: string, @Body() body: any, req: Request, res: Response): void {
+    const todoId = parseInt(id, 10);
+    const todo = todos.get(todoId);
+
+    if (!todo) {
+      res.status(404).json({
+        success: false,
+        error: 'Todo not found',
+      });
+      return;
+    }
+
+    if (body.title !== undefined) {
+      todo.title = body.title;
+    }
+    if (body.completed !== undefined) {
+      todo.completed = body.completed;
+    }
+
+    todos.set(todoId, todo);
+
+    res.status(200).json({
+      success: true,
+      data: todo,
+      message: 'Todo updated successfully',
+    });
+  }
+
+  @Delete('/:id')
+  deleteTodo(@Param('id') id: string, req: Request, res: Response): void {
+    const todoId = parseInt(id, 10);
+
+    if (!todos.has(todoId)) {
+      res.status(404).json({
+        success: false,
+        error: 'Todo not found',
+      });
+      return;
+    }
+
+    todos.delete(todoId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Todo deleted successfully',
+    });
+  }
+}
+```
+
+## Step 5: Bootstrap Your Application
+
+Create `src/main.ts`:
+
+```typescript
+import 'reflect-metadata';
+import { Application } from '@framework/core';
+import { TodoController } from './todo.controller.js';
+
+async function bootstrap(): Promise<void> {
+  try {
+    // Create application instance
+    const app = new Application({
+      port: 3000,
+      host: 'localhost',
+      corsEnabled: true,
+    });
+
+    // Register the Todo controller
+    await app.registerModule(TodoController);
+
+    // Start the server
+    await app.start();
+    console.log('✅ Server running on http://localhost:3000');
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+bootstrap();
+```
+
+## Step 6: Run Your Server
+
+Add this script to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "ts-node src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js"
+  }
+}
+```
+
+Start your development server:
+
+```bash
+npm run dev
+```
+
+You should see:
+
+```
+✅ Server running on http://localhost:3000
+```
+
+## Step 7: Test Your API
+
+Open a new terminal and test your endpoints with `curl`:
+
+### Get All Todos
+
+```bash
+curl http://localhost:3000/api/todos
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    { "id": 1, "title": "Learn @framework/core", "completed": false },
+    { "id": 2, "title": "Build an API", "completed": false }
+  ],
+  "count": 2
+}
+```
+
+### Get a Specific Todo
+
+```bash
+curl http://localhost:3000/api/todos/1
+```
+
+### Create a New Todo
+
+```bash
+curl -X POST http://localhost:3000/api/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Write tests"}'
+```
+
+### Update a Todo
+
+```bash
+curl -X PUT http://localhost:3000/api/todos/1 \
+  -H "Content-Type: application/json" \
+  -d '{"completed": true}'
+```
+
+### Delete a Todo
+
+```bash
+curl -X DELETE http://localhost:3000/api/todos/1
+```
+
+## Next Steps
+
+Congratulations! You've just built your first API with @framework/core. Here's what to explore next:
+
+1. **[Installation & Setup](./02-installation.mdx)** - Comprehensive setup guide and configuration options
+2. **[Your First API](./03-your-first-api.mdx)** - Deeper dive into building production-ready APIs
+3. **[Project Structure](./04-project-structure.mdx)** - Organizing your project for scalability
+4. **[Architecture Overview](./05-architecture-overview.mdx)** - Understanding how the framework works
+
+## Troubleshooting
+
+### Port 3000 is already in use
+
+Change the port in `src/main.ts`:
+
+```typescript
+const app = new Application({
+  port: 3001,  // Use a different port
+  host: 'localhost',
+});
+```
+
+### TypeScript compilation errors
+
+Make sure `experimentalDecorators` and `emitDecoratorMetadata` are enabled in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
+```
+
+### Module not found errors
+
+Ensure you've installed all dependencies:
+
+```bash
+npm install @framework/core express reflect-metadata
+npm install --save-dev typescript ts-node @types/express @types/node
+```
+
+### Reflect-metadata import issue
+
+Make sure `import 'reflect-metadata'` is the first import in your main entry file (`src/main.ts`):
+
+```typescript
+import 'reflect-metadata';  // Must be first!
+import { Application } from '@framework/core';
+// ... rest of your code
+```
+
+## What You Learned
+
+In this guide, you:
+
+- ✅ Set up a Node.js project with TypeScript
+- ✅ Installed and configured @framework/core
+- ✅ Created your first Controller using decorators
+- ✅ Built a complete CRUD API
+- ✅ Tested your endpoints with curl
+
+You're now ready to build more complex APIs. The framework provides features for dependency injection, modules, middleware, validation, and much more!

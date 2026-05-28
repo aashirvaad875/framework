@@ -1,0 +1,70 @@
+---
+slug: /
+---
+
+# Welcome to @framework/core
+
+Enterprise TypeScript framework for building scalable Node.js applications with built-in support for modules, dependency injection, decorators, testing utilities, and production-grade features.
+
+## Quick Start
+
+```bash
+npm install @framework/core
+```
+
+Create your first API in 30 seconds:
+
+```typescript
+import { Application, Controller, Get } from '@framework/core';
+
+@Controller('/api')
+export class AppController {
+  @Get('/hello')
+  hello() {
+    return { message: 'Hello, World!' };
+  }
+}
+
+const app = new Application({ port: 3000 });
+app.registerModule(AppController);
+app.start();
+```
+
+## Key Features
+
+- 🏗️ **Module System** - Organize code into logical, reusable modules
+- 💉 **Dependency Injection** - Built-in DI container with full lifecycle management
+- 🎯 **Decorators** - Express intent with TypeScript decorators
+- ✅ **Testing** - Comprehensive testing utilities and patterns
+- 🚀 **Production Ready** - Optimization, monitoring, and deployment guides
+- 🔌 **Extensible** - Plugin system for customization
+- 📊 **Developer Tools** - Hot reload, request debugging, performance profiling
+
+## Documentation Structure
+
+- **[Foundations](./foundations/getting-started)** - Start here: installation, first API, project structure
+- **[Core Concepts](./core-concepts/modules)** - Deep dive: modules, DI, decorators
+- **[Building Apps](./building-apps/controllers-routing)** - Controllers, routing, testing, auth
+- **[Production](./production/deployment-overview)** - Deployment, performance, monitoring
+- **[Extensibility](./extensibility/plugins)** - Plugins, custom decorators, contributing
+- **[Examples](./examples/todo-api)** - Real-world example applications
+- **[Recipes](./recipes/common-patterns)** - Common patterns and troubleshooting
+
+## Learn More
+
+- 📖 [Full Documentation](./foundations/getting-started)
+- 💻 [GitHub Repository](https://github.com/framework/core)
+- 🐛 [Report Issues](https://github.com/framework/core/issues)
+- 💬 [Discussions](https://github.com/framework/core/discussions)
+
+## Community
+
+Join our community to ask questions, share ideas, and collaborate:
+
+- GitHub Discussions
+- GitHub Issues
+- Email: support@framework.com
+
+---
+
+**Ready to build?** [Get started now →](./foundations/getting-started)

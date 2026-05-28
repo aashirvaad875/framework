@@ -11,59 +11,6 @@ import { Command as Command9 } from "commander";
 // src/commands/create.ts
 import { Command } from "commander";
 
-// src/config-loader.ts
-import fs from "fs-extra";
-import path from "path";
-import { fileURLToPath } from "url";
-var __dirname = path.dirname(fileURLToPath(import.meta.url));
-var ConfigLoader = class {
-  static async load(projectRoot = process.cwd()) {
-    const jsonPath = path.join(projectRoot, ".frameworkrc.json");
-    if (await fs.pathExists(jsonPath)) {
-      const content = await fs.readJson(jsonPath);
-      return this.normalizeConfig(content);
-    }
-    const tsPath = path.join(projectRoot, "framework.config.ts");
-    if (await fs.pathExists(tsPath)) {
-      try {
-        const { default: config } = await import(`file://${tsPath}`);
-        return this.normalizeConfig(config);
-      } catch (err) {
-        console.warn(`Warning: Could not load framework.config.ts: ${err.message}`);
-      }
-    }
-    return this.getDefaults(projectRoot);
-  }
-  static normalizeConfig(config) {
-    var _a, _b, _c;
-    const cfg = config;
-    return {
-      modulePath: cfg.modulePath || "src/modules",
-      templatePath: cfg.templatePath || path.join(__dirname, "../templates"),
-      plugins: cfg.plugins || [],
-      naming: {
-        controllerSuffix: ((_a = cfg.naming) == null ? void 0 : _a.controllerSuffix) || "Controller",
-        serviceSuffix: ((_b = cfg.naming) == null ? void 0 : _b.serviceSuffix) || "Service",
-        modulePattern: ((_c = cfg.naming) == null ? void 0 : _c.modulePattern) || "*.module.ts"
-      },
-      overrides: cfg.overrides || {}
-    };
-  }
-  static getDefaults(_projectRoot) {
-    return {
-      modulePath: "src/modules",
-      templatePath: path.join(__dirname, "../templates"),
-      plugins: [],
-      naming: {
-        controllerSuffix: "Controller",
-        serviceSuffix: "Service",
-        modulePattern: "*.module.ts"
-      },
-      overrides: {}
-    };
-  }
-};
-
 // src/utils/prompt.ts
 import inquirer from "inquirer";
 var PromptUtility = class {
@@ -114,33 +61,33 @@ var PromptUtility = class {
 };
 
 // src/utils/file.ts
-import fs2 from "fs-extra";
-import path2 from "path";
+import fs from "fs-extra";
+import path from "path";
 var FileUtility = class {
   static async exists(filePath) {
-    return fs2.pathExists(filePath);
+    return fs.pathExists(filePath);
   }
   static async write(filePath, content, overwrite = false) {
     if (await this.exists(filePath) && !overwrite) {
       throw new Error(`File already exists: ${filePath}`);
     }
-    await fs2.ensureDir(path2.dirname(filePath));
-    await fs2.writeFile(filePath, content, "utf-8");
+    await fs.ensureDir(path.dirname(filePath));
+    await fs.writeFile(filePath, content, "utf-8");
   }
   static async read(filePath) {
-    return fs2.readFile(filePath, "utf-8");
+    return fs.readFile(filePath, "utf-8");
   }
   static async remove(filePath) {
-    await fs2.remove(filePath);
+    await fs.remove(filePath);
   }
   static async ensureDirectory(dirPath) {
-    await fs2.ensureDir(dirPath);
+    await fs.ensureDir(dirPath);
   }
   static normalizePath(filePath) {
     return filePath.replace(/\\/g, "/");
   }
   static async listFiles(dirPath, pattern) {
-    const files = await fs2.readdir(dirPath);
+    const files = await fs.readdir(dirPath);
     if (!pattern) {
       return files;
     }
@@ -214,6 +161,59 @@ var NamingUtility = class {
   }
 };
 
+// src/config-loader.ts
+import fs2 from "fs-extra";
+import path2 from "path";
+import { fileURLToPath } from "url";
+var __dirname = path2.dirname(fileURLToPath(import.meta.url));
+var ConfigLoader = class {
+  static async load(projectRoot = process.cwd()) {
+    const jsonPath = path2.join(projectRoot, ".frameworkrc.json");
+    if (await fs2.pathExists(jsonPath)) {
+      const content = await fs2.readJson(jsonPath);
+      return this.normalizeConfig(content);
+    }
+    const tsPath = path2.join(projectRoot, "framework.config.ts");
+    if (await fs2.pathExists(tsPath)) {
+      try {
+        const { default: config } = await import(`file://${tsPath}`);
+        return this.normalizeConfig(config);
+      } catch (err) {
+        console.warn(`Warning: Could not load framework.config.ts: ${err.message}`);
+      }
+    }
+    return this.getDefaults(projectRoot);
+  }
+  static normalizeConfig(config) {
+    var _a, _b, _c;
+    const cfg = config;
+    return {
+      modulePath: cfg.modulePath || "src/modules",
+      templatePath: cfg.templatePath || path2.join(__dirname, "../templates"),
+      plugins: cfg.plugins || [],
+      naming: {
+        controllerSuffix: ((_a = cfg.naming) == null ? void 0 : _a.controllerSuffix) || "Controller",
+        serviceSuffix: ((_b = cfg.naming) == null ? void 0 : _b.serviceSuffix) || "Service",
+        modulePattern: ((_c = cfg.naming) == null ? void 0 : _c.modulePattern) || "*.module.ts"
+      },
+      overrides: cfg.overrides || {}
+    };
+  }
+  static getDefaults(_projectRoot) {
+    return {
+      modulePath: "src/modules",
+      templatePath: path2.join(__dirname, "../templates"),
+      plugins: [],
+      naming: {
+        controllerSuffix: "Controller",
+        serviceSuffix: "Service",
+        modulePattern: "*.module.ts"
+      },
+      overrides: {}
+    };
+  }
+};
+
 // src/core/template-engine.ts
 import Handlebars from "handlebars";
 import fs3 from "fs-extra";
@@ -225,6 +225,9 @@ var TemplateEngine = class {
   constructor(builtInPath, customPath) {
     this.builtInTemplatesPath = builtInPath;
     this.customTemplatesPath = customPath || path3.join(os.homedir(), ".framework-cli", "templates");
+  }
+  get templatesPath() {
+    return this.builtInTemplatesPath;
   }
   async render(templateName, context) {
     const templateContent = await this.loadTemplate(templateName);
@@ -709,6 +712,8 @@ var ModuleGenerator = class extends BaseGenerator {
 
 // src/generators/app-generator.ts
 import path12 from "path";
+import fs5 from "fs-extra";
+import { execSync } from "child_process";
 var AppGenerator = class extends BaseGenerator {
   getTemplateName() {
     return "app";
@@ -730,51 +735,102 @@ var AppGenerator = class extends BaseGenerator {
     if (!validation.valid) {
       return { success: false, files: [], errors: [validation.error], message: validation.error };
     }
+    const appName = context.appName;
+    const targetPath = context.path || path12.join(process.cwd(), appName);
+    const skipInstall = context.skipInstall ?? false;
+    const packageManager = context.packageManager ?? "npm";
     try {
-      const appPath = context.path || process.cwd();
-      const srcPath = path12.join(appPath, "src");
-      await FileUtility.ensureDirectory(srcPath);
-      const mainContent = await this.templateEngine.render("app", {
-        appName: context.appName,
-        moduleName: "app",
-        className: "AppModule",
-        fileName: "main.ts",
-        description: "Application entry point"
-      });
-      const mainFile = path12.join(srcPath, "main.ts");
-      await FileUtility.write(mainFile, mainContent);
-      const moduleContent = await this.templateEngine.render("module", {
-        appName: context.appName,
-        moduleName: "app",
-        className: "AppModule",
-        fileName: "app.module.ts",
-        description: "Root application module"
-      });
-      const moduleFile = path12.join(srcPath, "app.module.ts");
-      await FileUtility.write(moduleFile, moduleContent);
+      if (await fs5.pathExists(targetPath) && !context.force) {
+        const items = await fs5.readdir(targetPath);
+        if (items.length > 0) {
+          return {
+            success: false,
+            files: [],
+            errors: [
+              `Directory already exists and is not empty: ${targetPath}. Use --force to overwrite.`
+            ],
+            message: "Target directory already exists"
+          };
+        }
+      }
+      const scaffoldPath = path12.join(this.templateEngine.templatesPath, "project-scaffold");
+      await fs5.copy(scaffoldPath, targetPath, { overwrite: context.force ?? false });
+      await this.replaceTokens(targetPath, appName);
+      try {
+        execSync("git init", { cwd: targetPath, stdio: "pipe" });
+      } catch {
+        console.warn("Warning: git init failed. Initialize manually.");
+      }
+      if (!skipInstall) {
+        const installCmd = packageManager === "pnpm" ? "pnpm install" : packageManager === "yarn" ? "yarn install" : "npm install";
+        execSync(installCmd, { cwd: targetPath, stdio: "inherit" });
+      }
+      const runCmd = packageManager === "pnpm" ? "pnpm" : packageManager === "yarn" ? "yarn" : "npm";
+      const installNote = skipInstall ? `  ${runCmd} install
+` : "";
       return {
         success: true,
-        files: [
-          { path: mainFile, content: mainContent },
-          { path: moduleFile, content: moduleContent }
-        ],
+        files: [],
         errors: [],
-        message: `\u2705 Created Application: ${context.appName}`
+        message: [
+          `
+\u2705 Project ${appName} created successfully!`,
+          `
+  cd ${appName}`,
+          `  cp .env.example .env`,
+          installNote,
+          `  ${runCmd} run dev
+`
+        ].filter(Boolean).join("\n")
       };
     } catch (err) {
+      await fs5.remove(targetPath).catch(() => {
+      });
       return {
         success: false,
         files: [],
         errors: [err.message],
-        message: `Error: ${err.message}`
+        message: `Error creating project: ${err.message}`
       };
+    }
+  }
+  async replaceTokens(dir, appName) {
+    const entries = await fs5.readdir(dir, { withFileTypes: true });
+    const textExts = /* @__PURE__ */ new Set([
+      ".ts",
+      ".js",
+      ".json",
+      ".md",
+      ".yml",
+      ".yaml",
+      ".txt",
+      ".example",
+      ".prettierrc",
+      ".gitignore",
+      ".dockerignore",
+      ""
+    ]);
+    for (const entry of entries) {
+      const fullPath = path12.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await this.replaceTokens(fullPath, appName);
+      } else if (textExts.has(path12.extname(entry.name))) {
+        const content = await fs5.readFile(fullPath, "utf-8");
+        if (content.includes("__APP_NAME__") || content.includes("APP_NAME_PLACEHOLDER")) {
+          await fs5.writeFile(
+            fullPath,
+            content.replaceAll("__APP_NAME__", appName).replaceAll("APP_NAME_PLACEHOLDER", appName),
+            "utf-8"
+          );
+        }
+      }
     }
   }
 };
 
 // src/commands/create.ts
 function createAppCommand() {
-  return new Command("create").description("Create a new framework application").argument("[name]", "Application name").option("--path <path>", "Output directory").option("--force", "Overwrite without prompting").action(async (name, options) => {
+  return new Command("create").description("Create a new framework application").argument("[name]", "Application name").option("--path <path>", "Output directory").option("--force", "Overwrite existing directory without prompting").option("--skip-install", "Skip package installation").option("--package-manager <manager>", "Package manager to use (npm, pnpm, yarn)", "npm").action(async (name, options) => {
     try {
       let appName = name;
       if (!appName) {
@@ -797,15 +853,21 @@ function createAppCommand() {
         astManipulator,
         pluginRegistry
       );
-      const result = await generator.execute({
+      const context = {
         projectRoot: process.cwd(),
         appName,
         modulePath: config.modulePath,
-        path: options.path
-      });
+        path: options.path,
+        force: options.force ?? false,
+        skipInstall: options.skipInstall ?? false,
+        packageManager: options.packageManager ?? "npm"
+      };
+      console.log(`
+Creating project ${appName}...`);
+      const result = await generator.execute(context);
       console.log(result.message);
       if (!result.success) {
-        result.errors.forEach((err) => console.error(`  - ${err}`));
+        result.errors.forEach((err) => console.error(`  \u274C ${err}`));
         process.exit(1);
       }
     } catch (err) {

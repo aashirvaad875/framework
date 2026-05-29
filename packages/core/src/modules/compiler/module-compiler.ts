@@ -3,7 +3,7 @@ import { ModuleMetadata } from '../metadata/index.js';
 import { DependencyGraph } from '../graph/index.js';
 import { ModuleRegistry } from '../registry/index.js';
 import { ModuleValidator } from './module-validator.js';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 
 const logger = new Logger('ModuleCompiler');
 
@@ -119,11 +119,16 @@ export class ModuleCompiler {
   /**
    * Collect all modules including transitive imports.
    */
-  private collectAllModules(modules: ModuleClass[], visited = new Set<ModuleClass>()): Set<ModuleClass> {
+  private collectAllModules(
+    modules: ModuleClass[],
+    visited = new Set<ModuleClass>()
+  ): Set<ModuleClass> {
     const collected = new Set<ModuleClass>(visited);
 
     for (const module of modules) {
-      if (collected.has(module)) continue;
+      if (collected.has(module)) {
+        continue;
+      }
       collected.add(module);
 
       const metadata = ModuleMetadata.extract(module);

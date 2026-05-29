@@ -1,7 +1,7 @@
 import type { Container } from '../di/index.js';
 import type { EventBus } from '../events/index.js';
 import type { Application } from '../application.js';
-import type { Logger } from '@framework/logger';
+import type { Logger } from '@dancha/logger';
 
 export type PluginLifecycleState = 'loading' | 'loaded' | 'unloading' | 'unloaded' | 'error';
 

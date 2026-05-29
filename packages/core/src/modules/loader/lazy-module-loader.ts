@@ -1,6 +1,6 @@
 import type { ModuleClass, LoadedModule } from '../types.js';
 import { ModuleRegistry } from '../registry/index.js';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 
 const logger = new Logger('LazyModuleLoader');
 

@@ -1,6 +1,6 @@
 {
-  "name": "@framework/logger",
-  "version": "0.1.0",
+  "name": "@dancha/logger",
+  "version": "0.2.0",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -18,7 +18,9 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -29,8 +31,8 @@
     "winston": "^3.10.0"
   },
   "devDependencies": {
-    "@framework/tsconfig": "workspace:*",
-    "@framework/eslint-config": "workspace:*",
+    "@dancha/tsconfig": "workspace:*",
+    "@dancha/eslint-config": "workspace:*",
     "@types/node": "^20.8.0",
     "typescript": "^5.2.2",
     "tsup": "^8.0.0"

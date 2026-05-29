@@ -6,6 +6,10 @@ export interface GeneratorContext {
   moduleName?: string;
   className?: string;
   description?: string;
+  path?: string;
+  force?: boolean;
+  skipInstall?: boolean;
+  packageManager?: 'npm' | 'pnpm' | 'yarn';
   [key: string]: any; // Additional context from user input
 }
 

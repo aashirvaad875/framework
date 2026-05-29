@@ -1,7 +1,7 @@
 import type { Application } from '../application.js';
 import type { Container } from '../di/index.js';
 import type { EventBus } from '../events/index.js';
-import type { Logger } from '@framework/logger';
+import type { Logger } from '@dancha/logger';
 import type { PluginManifest, PluginLifecycleHook, PluginContext } from './types.js';
 
 export class PluginContextImpl implements PluginContext {

@@ -4,6 +4,6 @@ import sharedConfig from '@framework/eslint-config';
 export default [
   ...sharedConfig,
   {
-    ignores: ['tooling/**', 'examples/**', '**/dist/**'],
+    ignores: ['tooling/**', 'examples/**', '**/dist/**', '**/templates/**'],
   },
 ];

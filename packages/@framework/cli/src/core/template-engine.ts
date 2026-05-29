@@ -14,6 +14,10 @@ export class TemplateEngine {
     this.customTemplatesPath = customPath || path.join(os.homedir(), '.framework-cli', 'templates');
   }
 
+  get templatesPath(): string {
+    return this.builtInTemplatesPath;
+  }
+
   async render(templateName: string, context: TemplateContext): Promise<string> {
     const templateContent = await this.loadTemplate(templateName);
     const template = Handlebars.compile(templateContent);

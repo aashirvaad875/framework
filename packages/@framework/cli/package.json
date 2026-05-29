@@ -1,6 +1,6 @@
 {
-  "name": "@framework/cli",
-  "version": "1.0.0",
+  "name": "@dancha/cli",
+  "version": "1.1.0",
   "description": "Enterprise CLI for scaffolding framework projects and modules",
   "type": "module",
   "exports": {
@@ -11,6 +11,14 @@
   },
   "bin": {
     "framework": "./bin/framework.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "templates"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --outDir dist --dts",

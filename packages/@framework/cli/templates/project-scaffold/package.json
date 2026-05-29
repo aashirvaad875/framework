@@ -2,6 +2,7 @@
   "name": "__APP_NAME__",
   "version": "0.1.1",
   "description": "",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "node --loader tsx src/main.ts",

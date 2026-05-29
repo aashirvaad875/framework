@@ -18,7 +18,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo build && changeset publish",
+    "release": "turbo build --filter @dancha/cli --filter @dancha/core --filter @dancha/logger && changeset publish",
     "prepare": "husky"
   },
   "devDependencies": {

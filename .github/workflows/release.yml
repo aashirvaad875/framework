@@ -59,7 +59,7 @@ jobs:
           commit: 'chore(release): publish packages'
           title: 'chore(release): bump versions'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Tag Release
@@ -69,4 +69,4 @@ jobs:
           git config user.name "aashirvaad875"
           git tag -l | grep -E "^@dancha" | xargs -I {} git push origin {}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}

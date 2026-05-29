@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { Application } from '@framework/core';
-import { Logger } from '@framework/logger';
+import { Application } from '@dancha/core';
+import { Logger } from '@dancha/logger';
 
 const logger = new Logger('BasicExample');
 
@@ -14,7 +14,7 @@ async function main(): Promise<void> {
   });
 
   logger.info('Example server configured');
-  logger.info('Use @framework/core to define controllers and services');
+  logger.info('Use @dancha/core to define controllers and services');
   logger.info('Visit the ARCHITECTURE.md for complete framework documentation');
 
   await app.start();

@@ -24,7 +24,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -49,14 +49,19 @@ jobs:
 
       - name: Build packages
         run: pnpm build --filter @dancha/cli --filter @dancha/core --filter @dancha/logger
+      - name: Setup npm authentication
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
         with:
           publish: pnpm release
-          commit: 'chore(release): publish packages'
-          title: 'chore(release): bump versions'
+          commit: "chore(release): publish packages"
+          title: "chore(release): bump versions"
         env:
           GITHUB_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

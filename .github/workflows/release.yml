@@ -24,7 +24,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: '18'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -48,15 +48,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm build --filter @dancha/cli --filter @dancha/core --filter @dancha/logger
+        run: pnpm build --filter @dancha/cli --filter @dancha/core --filter @dancha/logger --ignore @framework/example-basic --ignore __APP_NAME__
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
         with:
           publish: pnpm release
-          commit: "chore(release): publish packages"
-          title: "chore(release): bump versions"
+          commit: 'chore(release): publish packages'
+          title: 'chore(release): bump versions'
         env:
           GITHUB_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

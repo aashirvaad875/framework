@@ -753,8 +753,11 @@ var AppGenerator = class extends BaseGenerator {
           };
         }
       }
+      if (context.force && await fs5.pathExists(targetPath)) {
+        await fs5.emptyDir(targetPath);
+      }
       const scaffoldPath = path12.join(this.templateEngine.templatesPath, "project-scaffold");
-      await fs5.copy(scaffoldPath, targetPath, { overwrite: context.force ?? false });
+      await fs5.copy(scaffoldPath, targetPath, { overwrite: true });
       await this.replaceTokens(targetPath, appName);
       try {
         execSync("git init", { cwd: targetPath, stdio: "pipe" });
@@ -763,11 +766,16 @@ var AppGenerator = class extends BaseGenerator {
       }
       if (!skipInstall) {
         const installCmd = packageManager === "pnpm" ? "pnpm install" : packageManager === "yarn" ? "yarn install" : "npm install";
-        execSync(installCmd, { cwd: targetPath, stdio: "inherit" });
+        try {
+          execSync(installCmd, { cwd: targetPath, stdio: "inherit" });
+        } catch {
+          console.warn(`Warning: ${installCmd} failed. Run it manually in the project directory.`);
+        }
       }
       const runCmd = packageManager === "pnpm" ? "pnpm" : packageManager === "yarn" ? "yarn" : "npm";
       const installNote = skipInstall ? `  ${runCmd} install
 ` : "";
+      const displayPath = path12.relative(process.cwd(), targetPath) || targetPath;
       return {
         success: true,
         files: [],
@@ -776,7 +784,7 @@ var AppGenerator = class extends BaseGenerator {
           `
 \u2705 Project ${appName} created successfully!`,
           `
-  cd ${appName}`,
+  cd ${displayPath}`,
           `  cp .env.example .env`,
           installNote,
           `  ${runCmd} run dev

@@ -1,6 +1,6 @@
 {
   "name": "@framework/cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Enterprise CLI for scaffolding framework projects and modules",
   "type": "module",
   "exports": {

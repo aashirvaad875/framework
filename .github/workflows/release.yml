@@ -60,7 +60,7 @@ jobs:
           title: 'chore(release): bump versions'
         env:
           GITHUB_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}
 
       - name: Tag Release
         if: steps.changesets.outputs.published == 'true'

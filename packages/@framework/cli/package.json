@@ -10,7 +10,7 @@
     }
   },
   "bin": {
-    "framework": "./bin/framework.js"
+    "dancha": "./bin/dancha.js"
   },
   "files": [
     "dist",
@@ -24,7 +24,7 @@
     "build": "tsup src/index.ts --format esm --outDir dist --dts",
     "dev": "node --loader tsx src/index.ts",
     "test": "vitest",
-    "cli": "node --loader tsx bin/framework.js"
+    "cli": "node --loader tsx bin/dancha.js"
   },
   "dependencies": {
     "commander": "^11.1.0",

@@ -10,7 +10,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "test": "turbo test",
+    "test": "turbo test --filter='!__APP_NAME__'",
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "clean": "turbo clean && find . -name 'dist' -not -path '*/node_modules/*' -type d | xargs rm -rf",

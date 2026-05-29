@@ -440,7 +440,7 @@ describe('DeveloperDashboard', () => {
         channels: ['request:captured', 'metrics:updated'],
       };
 
-      if (messageHandler) {
+      if (messageHandler && typeof messageHandler === 'function') {
         messageHandler(Buffer.from(JSON.stringify(message)));
       }
 
@@ -467,7 +467,7 @@ describe('DeveloperDashboard', () => {
         type: 'ping',
       };
 
-      if (messageHandler) {
+      if (messageHandler && typeof messageHandler === 'function') {
         messageHandler(Buffer.from(JSON.stringify(message)));
       }
 

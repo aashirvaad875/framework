@@ -2,8 +2,15 @@ import { Injectable, Module } from '../index.js';
 import { JwtService } from './jwt.js';
 import { PasswordService } from './password.js';
 import { PermissionManager } from './permissions.js';
-import { JwtAuthGuard, RoleGuard, PermissionGuard, ApiKeyGuard, CompositeAuthGuard } from './guards.js';
-import { AuthConfig, Role, Permission } from './types.js';
+import {
+  JwtAuthGuard,
+  RoleGuard,
+  PermissionGuard,
+  ApiKeyGuard,
+  CompositeAuthGuard,
+} from './guards.js';
+import type { AuthConfig } from './types.js';
+import { Role, Permission } from './types.js';
 
 @Injectable()
 export class AuthService {

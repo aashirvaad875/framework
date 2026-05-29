@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ProfilerCommand } from '../profiler.command.js';
 import { Profiler } from '../../optimization/layer3/profiler.js';
 import { MetricsCollector } from '../../optimization/layer3/metrics-collector.js';

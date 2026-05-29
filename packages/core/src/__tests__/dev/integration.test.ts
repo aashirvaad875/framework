@@ -77,13 +77,18 @@ describe('DevTooling Integration', () => {
         enabled: true,
         hotReload: {
           enabled: true,
-          watchDirs: ['src'],
+          directories: ['src'],
+          debounceMs: 300,
         },
         debug: {
           enabled: true,
+          captureRequestBody: true,
+          maxHistorySize: 100,
         },
         dashboard: {
           enabled: false,
+          path: '/dashboard',
+          wsEnabled: false,
         },
       };
 
@@ -222,9 +227,9 @@ describe('DevTooling Integration', () => {
         app = new Application({
           devTooling: {
             enabled: true,
-            hotReload: { enabled: false, watchDirs: [] },
-            debug: { enabled: false },
-            dashboard: { enabled: false },
+            hotReload: { enabled: false, directories: [], debounceMs: 300 },
+            debug: { enabled: false, captureRequestBody: false, maxHistorySize: 50 },
+            dashboard: { enabled: false, path: '/dashboard', wsEnabled: false },
           },
         });
       }).not.toThrow();

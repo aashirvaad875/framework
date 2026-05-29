@@ -1,6 +1,6 @@
 import type { ModuleClass, LoadedModule } from '../types.js';
 import { ProviderScopeManager } from './provider-scope-manager.js';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 
 const logger = new Logger('ModuleRegistry');
 
@@ -81,9 +81,15 @@ export class ModuleRegistry {
    * Get load status of all modules.
    */
   getStatus(moduleClass: ModuleClass): 'pending' | 'loading' | 'loaded' | 'failed' {
-    if (this.loadingModules.has(moduleClass)) return 'loading';
-    if (this.failedModules.has(moduleClass)) return 'failed';
-    if (this.loadedModules.has(moduleClass)) return 'loaded';
+    if (this.loadingModules.has(moduleClass)) {
+      return 'loading';
+    }
+    if (this.failedModules.has(moduleClass)) {
+      return 'failed';
+    }
+    if (this.loadedModules.has(moduleClass)) {
+      return 'loaded';
+    }
     return 'pending';
   }
 
@@ -92,7 +98,9 @@ export class ModuleRegistry {
    */
   isProviderAccessible(provider: string | symbol | Function, fromModule: ModuleClass): boolean {
     const module = this.loadedModules.get(fromModule);
-    if (!module) return false;
+    if (!module) {
+      return false;
+    }
 
     return ProviderScopeManager.canAccess(provider, module, this.loadedModules);
   }
@@ -102,7 +110,9 @@ export class ModuleRegistry {
    */
   getAccessibleProviders(moduleClass: ModuleClass): Map<string | symbol | Function, any> {
     const module = this.loadedModules.get(moduleClass);
-    if (!module) return new Map();
+    if (!module) {
+      return new Map();
+    }
 
     return ProviderScopeManager.getAccessibleProviders(module, this.loadedModules);
   }

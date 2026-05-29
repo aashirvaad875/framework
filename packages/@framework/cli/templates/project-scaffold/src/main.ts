@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { config } from 'dotenv';
 config();
-import { Application, initializeDatabase, globalErrorHandler } from '@framework/core';
-import { Logger } from '@framework/logger';
+import { Application, initializeDatabase, globalErrorHandler } from '@dancha/core';
+import { Logger } from '@dancha/logger';
 import { appConfig } from './config/app.config.js';
 import { databaseConfig } from './config/database.config.js';
 import { UserModule } from './modules/users/user.module.js';

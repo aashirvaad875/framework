@@ -13,8 +13,8 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@framework/core": "^0.2.0",
-    "@framework/logger": "^0.2.0",
+    "@dancha/core": "^0.2.0",
+    "@dancha/logger": "^0.2.0",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.3.16",
     "pg": "^8.11.2",

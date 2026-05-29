@@ -1,8 +1,13 @@
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { HttpException } from './exceptions/index.js';
-import { ExceptionFilter, HttpExceptionFilter, ValidationExceptionFilter, TypeErrorExceptionFilter } from './exceptions/exception-filter.js';
+import {
+  ExceptionFilter,
+  HttpExceptionFilter,
+  ValidationExceptionFilter,
+  TypeErrorExceptionFilter,
+} from './exceptions/exception-filter.js';
 import { ErrorResponseBuilder } from './exceptions/exception-response.js';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 
 const logger = new Logger('ErrorHandler');
 
@@ -22,11 +27,11 @@ class GlobalExceptionHandler {
     const traceId = this.generateTraceId();
 
     try {
-      const filter = this.filters.find((f) => f.supports(error));
+      const filter = this.filters.find(f => f.supports(error));
 
       if (filter) {
         this.logError(error, req, traceId, isDev);
-        filter.catch(error, req, res, next);
+        void filter.catch(error, req, res, next);
         return;
       }
 
@@ -37,7 +42,13 @@ class GlobalExceptionHandler {
     }
   }
 
-  private handleUnknownError(error: Error, req: Request, res: Response, traceId: string, isDev: boolean): void {
+  private handleUnknownError(
+    error: Error,
+    req: Request,
+    res: Response,
+    traceId: string,
+    isDev: boolean
+  ): void {
     const builder = new ErrorResponseBuilder()
       .setMessage(isDev ? error.message : 'Internal server error')
       .setCode('INTERNAL_SERVER_ERROR')
@@ -47,7 +58,7 @@ class GlobalExceptionHandler {
       .setTraceId(traceId);
 
     if (isDev && error.stack) {
-      builder.setStack(error.stack.split('\n').map((line) => line.trim()));
+      builder.setStack(error.stack.split('\n').map(line => line.trim()));
     }
 
     this.logError(error, req, traceId, isDev);
@@ -94,13 +105,15 @@ class GlobalExceptionHandler {
   }
 
   private sanitizeBody(body: any): any {
-    if (!body || typeof body !== 'object') return undefined;
+    if (!body || typeof body !== 'object') {
+      return undefined;
+    }
 
     const sensitive = ['password', 'token', 'secret', 'apiKey', 'creditCard'];
     const sanitized = { ...body };
 
     for (const key in sanitized) {
-      if (sensitive.some((s) => key.toLowerCase().includes(s.toLowerCase()))) {
+      if (sensitive.some(s => key.toLowerCase().includes(s.toLowerCase()))) {
         sanitized[key] = '***REDACTED***';
       }
     }
@@ -115,7 +128,12 @@ class GlobalExceptionHandler {
 
 export const globalExceptionHandler = new GlobalExceptionHandler();
 
-export const errorHandler: ErrorRequestHandler = (error: Error, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler: ErrorRequestHandler = (
+  error: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   globalExceptionHandler.handle(error, req, res, next);
 };
 

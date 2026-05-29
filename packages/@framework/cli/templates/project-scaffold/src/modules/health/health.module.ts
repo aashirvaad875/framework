@@ -1,4 +1,4 @@
-import { Module } from '@framework/core';
+import { Module } from '@dancha/core';
 import { HealthController } from './controllers/health.controller.js';
 
 @Module({

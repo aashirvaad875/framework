@@ -1,5 +1,5 @@
 import type { LoadedModule, ModuleLoadEvent } from '../types.js';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 
 const logger = new Logger('ModuleInitializer');
 
@@ -78,7 +78,10 @@ export class ModuleInitializer {
   /**
    * Call onApplicationShutdown hooks.
    */
-  static async onApplicationShutdown(modules: LoadedModule[], signal?: string): Promise<ModuleLoadEvent[]> {
+  static async onApplicationShutdown(
+    modules: LoadedModule[],
+    signal?: string
+  ): Promise<ModuleLoadEvent[]> {
     const events: ModuleLoadEvent[] = [];
 
     for (const module of modules) {
@@ -112,21 +115,42 @@ export class ModuleInitializer {
   /**
    * Check if value has onModuleInit method.
    */
-  private static hasOnModuleInit(value: unknown): value is { onModuleInit(): Promise<void> | void } {
-    return typeof value === 'object' && value !== null && 'onModuleInit' in value && typeof (value as any).onModuleInit === 'function';
+  private static hasOnModuleInit(
+    value: unknown
+  ): value is { onModuleInit(): Promise<void> | void } {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      'onModuleInit' in value &&
+      typeof (value as any).onModuleInit === 'function'
+    );
   }
 
   /**
    * Check if value has onApplicationBootstrap method.
    */
-  private static hasOnApplicationBootstrap(value: unknown): value is { onApplicationBootstrap(): Promise<void> | void } {
-    return typeof value === 'object' && value !== null && 'onApplicationBootstrap' in value && typeof (value as any).onApplicationBootstrap === 'function';
+  private static hasOnApplicationBootstrap(
+    value: unknown
+  ): value is { onApplicationBootstrap(): Promise<void> | void } {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      'onApplicationBootstrap' in value &&
+      typeof (value as any).onApplicationBootstrap === 'function'
+    );
   }
 
   /**
    * Check if value has onApplicationShutdown method.
    */
-  private static hasOnApplicationShutdown(value: unknown): value is { onApplicationShutdown(signal?: string): Promise<void> | void } {
-    return typeof value === 'object' && value !== null && 'onApplicationShutdown' in value && typeof (value as any).onApplicationShutdown === 'function';
+  private static hasOnApplicationShutdown(
+    value: unknown
+  ): value is { onApplicationShutdown(signal?: string): Promise<void> | void } {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      'onApplicationShutdown' in value &&
+      typeof (value as any).onApplicationShutdown === 'function'
+    );
   }
 }

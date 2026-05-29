@@ -1,5 +1,5 @@
 {
-  "name": "@framework/cli",
+  "name": "@dancha/cli",
   "version": "1.1.0",
   "description": "Enterprise CLI for scaffolding framework projects and modules",
   "type": "module",

@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@framework/core';
+import { Injectable, Inject } from '@dancha/core';
 import { UserRepository } from '../repositories/user.repository.js';
 import type { UserEntity } from '../entities/user.entity.js';
 import type { CreateUserDto, UpdateUserDto } from '../dto/index.js';

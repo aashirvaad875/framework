@@ -1,4 +1,4 @@
-import sharedConfig from '@framework/eslint-config';
+import sharedConfig from '@dancha/eslint-config';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [

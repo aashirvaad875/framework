@@ -1,5 +1,5 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 
 const logger = new Logger('Database');
 

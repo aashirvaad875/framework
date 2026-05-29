@@ -1,5 +1,5 @@
 {
-  "name": "@framework/core",
+  "name": "@dancha/core",
   "version": "0.2.0",
   "license": "MIT",
   "type": "module",
@@ -29,7 +29,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@framework/logger": "workspace:*",
+    "@dancha/logger": "workspace:*",
     "@grpc/grpc-js": "^1.14.4",
     "amqplib": "^0.10.3",
     "bcrypt": "^5.1.1",
@@ -46,8 +46,8 @@
     "typeorm": "^0.3.16"
   },
   "devDependencies": {
-    "@framework/eslint-config": "workspace:*",
-    "@framework/tsconfig": "workspace:*",
+    "@dancha/eslint-config": "workspace:*",
+    "@dancha/tsconfig": "workspace:*",
     "@types/amqplib": "^0.10.1",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",

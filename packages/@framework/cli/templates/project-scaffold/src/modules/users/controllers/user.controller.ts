@@ -11,7 +11,7 @@ import {
   Inject,
   UsePipe,
   JoiValidationPipe,
-} from '@framework/core';
+} from '@dancha/core';
 import { UserService } from '../services/user.service.js';
 import {
   CreateUserDto,

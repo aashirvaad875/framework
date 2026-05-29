@@ -9,7 +9,7 @@ import {
   LifecycleRunner,
 } from './http/index.js';
 import { Module } from './module.js';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 import { Container } from './di/index.js';
 import { EventBus } from './events/index.js';
 import { PluginManager } from './plugins/plugin.manager.js';

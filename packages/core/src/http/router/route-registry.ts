@@ -3,20 +3,24 @@ import type { LifecycleRunner } from '../lifecycle/lifecycle-runner.js';
 import { createRouteHandler } from '../pipeline/route-pipeline.js';
 import { ControllerFactory } from '../execution/controller-factory.js';
 import { CONTROLLER_METADATA_KEY, ROUTE_METADATA_KEY } from '../../decorators/index.js';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 
 export class RouteRegistry {
   private readonly logger = new Logger('RouteRegistry');
 
   register(controllers: Function[], adapter: HttpAdapter, runner: LifecycleRunner): void {
     for (const controllerClass of controllers) {
-      const controllerMetadata = (Reflect as any).getMetadata?.(CONTROLLER_METADATA_KEY, controllerClass);
+      const controllerMetadata = (Reflect as any).getMetadata?.(
+        CONTROLLER_METADATA_KEY,
+        controllerClass
+      );
       const basePath = controllerMetadata?.path || '';
 
       const instance = ControllerFactory.create(controllerClass);
       runner.register(instance);
 
-      const routes = (Reflect as any).getMetadata?.(ROUTE_METADATA_KEY, controllerClass.prototype) || [];
+      const routes =
+        (Reflect as any).getMetadata?.(ROUTE_METADATA_KEY, controllerClass.prototype) || [];
 
       for (const route of routes) {
         const fullPath = this.buildPath(adapter.getGlobalPrefix(), basePath, route.path);

@@ -1,5 +1,5 @@
-import { Injectable } from '@framework/core';
-import { getDataSource } from '@framework/core';
+import { Injectable } from '@dancha/core';
+import { getDataSource } from '@dancha/core';
 import type { Repository } from 'typeorm';
 import { UserEntity } from '../entities/user.entity.js';
 

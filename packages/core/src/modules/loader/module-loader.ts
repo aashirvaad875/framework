@@ -1,8 +1,8 @@
-import type { ModuleClass, LoadedModule } from '../types.js';
+import type { LoadedModule } from '../types.js';
 import { ModuleRegistry } from '../registry/index.js';
 import { ModuleInitializer } from './module-initializer.js';
 import { di } from '../../container.js';
-import { Logger } from '@framework/logger';
+import { Logger } from '@dancha/logger';
 
 const logger = new Logger('ModuleLoader');
 

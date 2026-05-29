@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Res } from '@framework/core';
+import { Controller, Get, Req, Res } from '@dancha/core';
 
 @Controller('/health')
 export class HealthController {

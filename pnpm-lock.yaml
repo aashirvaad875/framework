@@ -173,11 +173,11 @@ importers:
   packages/@framework/cli/templates/project-scaffold:
     dependencies:
       '@dancha/core':
-        specifier: workspace:*
-        version: link:../../../../core
+        specifier: ^0.3.0
+        version: 0.3.0(date-fns@4.3.0)(pg@8.21.0)(reflect-metadata@0.1.14)
       '@dancha/logger':
-        specifier: workspace:*
-        version: link:../../../../logger
+        specifier: ^0.3.0
+        version: 0.3.0
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1
@@ -620,6 +620,20 @@ packages:
     resolution:
       {
         integrity: sha512-R4MSXTVnuMzGD7bzHdW2ZhhdPC/igELENcq5IjEverBvq5hn1SXCWcsi6eSsdWP0/Ur+SItRRjAktmdoX/8R/Q==,
+      }
+
+  '@dancha/core@0.3.0':
+    resolution:
+      {
+        integrity: sha512-z9SJZl8nZHteSuH7knhBv5LR7Q/EOqqBaofN2TFoX6IuqA7bw1OF6FAny1aXMEIK7lhqWVGnnYG6U3oI+MYXWA==,
+      }
+    peerDependencies:
+      reflect-metadata: ^0.1.13
+
+  '@dancha/logger@0.3.0':
+    resolution:
+      {
+        integrity: sha512-zBfb3Sdk8f+4LBXI2yLEIUAvc4HE4B/pZyPpYIVohK9zjwjEzfgI/U4W6Jf1sQV+n8lqkgAC83mX5DLNYX306Q==,
       }
 
   '@esbuild/aix-ppc64@0.21.5':
@@ -6590,6 +6604,48 @@ snapshots:
       '@so-ric/colorspace': 1.1.6
       enabled: 2.0.0
       kuler: 2.0.0
+
+  '@dancha/core@0.3.0(date-fns@4.3.0)(pg@8.21.0)(reflect-metadata@0.1.14)':
+    dependencies:
+      '@dancha/logger': 0.3.0
+      '@grpc/grpc-js': 1.14.4
+      amqplib: 0.10.9
+      bcrypt: 5.1.1
+      bullmq: 5.77.4
+      cors: 2.8.6
+      cron-parser: 4.9.0
+      date-fns-tz: 3.2.0(date-fns@4.3.0)
+      express: 4.22.2
+      ioredis: 5.11.0
+      jsonwebtoken: 9.0.3
+      kafkajs: 2.2.4
+      protobufjs: 8.4.2
+      reflect-metadata: 0.1.14
+      typeorm: 0.3.30(ioredis@5.11.0)(pg@8.21.0)
+    transitivePeerDependencies:
+      - '@google-cloud/spanner'
+      - '@sap/hana-client'
+      - babel-plugin-macros
+      - better-sqlite3
+      - date-fns
+      - encoding
+      - mongodb
+      - mssql
+      - mysql2
+      - oracledb
+      - pg
+      - pg-native
+      - pg-query-stream
+      - redis
+      - sql.js
+      - sqlite3
+      - supports-color
+      - ts-node
+      - typeorm-aurora-data-api-driver
+
+  '@dancha/logger@0.3.0':
+    dependencies:
+      winston: 3.19.0
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true

@@ -1,5 +1,5 @@
 {
-  "name": "@framework/api",
+  "name": "@dancha/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,8 +16,8 @@
     "seed": "node --loader tsx scripts/seed.ts"
   },
   "dependencies": {
-    "@framework/core": "workspace:*",
-    "@framework/logger": "workspace:*",
+    "@dancha/core": "workspace:*",
+    "@dancha/logger": "workspace:*",
     "dotenv": "^16.3.1",
     "joi": "^17.10.0",
     "pg": "^8.11.2",
@@ -26,7 +26,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@framework/cli": "workspace:*",
+    "@dancha/cli": "workspace:*",
     "@framework/eslint-config": "workspace:*",
     "@framework/tsconfig": "workspace:*",
     "@types/node": "^20.8.0",

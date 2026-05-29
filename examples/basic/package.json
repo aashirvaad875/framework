@@ -9,8 +9,8 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@framework/core": "workspace:*",
-    "@framework/logger": "workspace:*",
+    "@dancha/core": "workspace:*",
+    "@dancha/logger": "workspace:*",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {

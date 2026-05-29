@@ -46,8 +46,8 @@
     "typeorm": "^0.3.16"
   },
   "devDependencies": {
-    "@dancha/eslint-config": "workspace:*",
-    "@dancha/tsconfig": "workspace:*",
+    "@framework/eslint-config": "workspace:*",
+    "@framework/tsconfig": "workspace:*",
     "@types/amqplib": "^0.10.1",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",

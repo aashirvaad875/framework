@@ -3,12 +3,20 @@ import path from 'path';
 import { Project } from 'ts-morph';
 
 export class ModuleIntelligence {
-  private project: Project;
+  private project: Project | null = null;
+  private projectRoot: string;
 
   constructor(projectRoot: string) {
-    this.project = new Project({
-      tsConfigFilePath: path.join(projectRoot, 'tsconfig.json'),
-    });
+    this.projectRoot = projectRoot;
+  }
+
+  private getProject(): Project {
+    if (!this.project) {
+      this.project = new Project({
+        tsConfigFilePath: path.join(this.projectRoot, 'tsconfig.json'),
+      });
+    }
+    return this.project;
   }
 
   async findModule(moduleName: string, modulesPath: string): Promise<string> {
@@ -63,7 +71,7 @@ export class ModuleIntelligence {
     modulePath: string,
     registrationType: 'controller' | 'provider'
   ): Promise<string> {
-    const sourceFile = this.project.addSourceFileAtPath(modulePath);
+    const sourceFile = this.getProject().addSourceFileAtPath(modulePath);
     const moduleDecorator = sourceFile
       .getClassByName(path.basename(modulePath, '.ts').replace('.module', ''))
       ?.getDecorators()

@@ -56,7 +56,13 @@ export class AppGenerator extends BaseGenerator {
         await fs.emptyDir(targetPath);
       }
       const scaffoldPath = path.join(this.templateEngine.templatesPath, 'project-scaffold');
-      await fs.copy(scaffoldPath, targetPath, { overwrite: true });
+      await fs.copy(scaffoldPath, targetPath, {
+        overwrite: true,
+        filter: src => {
+          const basename = path.basename(src);
+          return basename !== 'node_modules' && basename !== 'dist' && basename !== '.turbo';
+        },
+      });
       await this.replaceTokens(targetPath, appName);
 
       try {

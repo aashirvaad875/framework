@@ -2,16 +2,24 @@ import { Project, ImportDeclarationStructure } from 'ts-morph';
 import path from 'path';
 
 export class ASTManipulator {
-  private project: Project;
+  private project: Project | null = null;
+  private projectRoot: string;
 
   constructor(projectRoot: string) {
-    this.project = new Project({
-      tsConfigFilePath: path.join(projectRoot, 'tsconfig.json'),
-    });
+    this.projectRoot = projectRoot;
+  }
+
+  private getProject(): Project {
+    if (!this.project) {
+      this.project = new Project({
+        tsConfigFilePath: path.join(this.projectRoot, 'tsconfig.json'),
+      });
+    }
+    return this.project;
   }
 
   addImport(filePath: string, importPath: string, namedImports: string | string[]): void {
-    const sourceFile = this.project.addSourceFileAtPath(filePath);
+    const sourceFile = this.getProject().addSourceFileAtPath(filePath);
 
     const names = Array.isArray(namedImports) ? namedImports : [namedImports];
 
@@ -41,7 +49,7 @@ export class ASTManipulator {
     className: string,
     arrayType: 'controllers' | 'providers' | 'guards' | 'middleware'
   ): void {
-    const sourceFile = this.project.addSourceFileAtPath(filePath);
+    const sourceFile = this.getProject().addSourceFileAtPath(filePath);
     const moduleClass = sourceFile.getClasses()[0];
 
     if (!moduleClass) {
@@ -86,7 +94,7 @@ export class ASTManipulator {
   }
 
   updateBarrelExport(indexFilePath: string, exportPath: string): void {
-    const sourceFile = this.project.addSourceFileAtPath(indexFilePath);
+    const sourceFile = this.getProject().addSourceFileAtPath(indexFilePath);
 
     const existingExport = sourceFile
       .getExportDeclarations()
@@ -100,6 +108,6 @@ export class ASTManipulator {
   }
 
   async saveChanges(): Promise<void> {
-    await this.project.save();
+    await this.getProject().save();
   }
 }

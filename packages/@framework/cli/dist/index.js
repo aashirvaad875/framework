@@ -262,11 +262,18 @@ import fs4 from "fs-extra";
 import path4 from "path";
 import { Project } from "ts-morph";
 var ModuleIntelligence = class {
-  project;
+  project = null;
+  projectRoot;
   constructor(projectRoot) {
-    this.project = new Project({
-      tsConfigFilePath: path4.join(projectRoot, "tsconfig.json")
-    });
+    this.projectRoot = projectRoot;
+  }
+  getProject() {
+    if (!this.project) {
+      this.project = new Project({
+        tsConfigFilePath: path4.join(this.projectRoot, "tsconfig.json")
+      });
+    }
+    return this.project;
   }
   async findModule(moduleName, modulesPath) {
     const files = await fs4.readdir(modulesPath);
@@ -302,7 +309,7 @@ var ModuleIntelligence = class {
   }
   async getRegistrationTarget(modulePath, registrationType) {
     var _a;
-    const sourceFile = this.project.addSourceFileAtPath(modulePath);
+    const sourceFile = this.getProject().addSourceFileAtPath(modulePath);
     const moduleDecorator = (_a = sourceFile.getClassByName(path4.basename(modulePath, ".ts").replace(".module", ""))) == null ? void 0 : _a.getDecorators().find((d) => d.getName() === "Module");
     if (!moduleDecorator) {
       throw new Error(`@Module decorator not found in ${modulePath}`);
@@ -316,14 +323,21 @@ var ModuleIntelligence = class {
 import { Project as Project2 } from "ts-morph";
 import path5 from "path";
 var ASTManipulator = class {
-  project;
+  project = null;
+  projectRoot;
   constructor(projectRoot) {
-    this.project = new Project2({
-      tsConfigFilePath: path5.join(projectRoot, "tsconfig.json")
-    });
+    this.projectRoot = projectRoot;
+  }
+  getProject() {
+    if (!this.project) {
+      this.project = new Project2({
+        tsConfigFilePath: path5.join(this.projectRoot, "tsconfig.json")
+      });
+    }
+    return this.project;
   }
   addImport(filePath, importPath, namedImports) {
-    const sourceFile = this.project.addSourceFileAtPath(filePath);
+    const sourceFile = this.getProject().addSourceFileAtPath(filePath);
     const names = Array.isArray(namedImports) ? namedImports : [namedImports];
     const existing = sourceFile.getImportDeclaration((d) => {
       return d.getModuleSpecifierValue() === importPath;
@@ -342,7 +356,7 @@ var ASTManipulator = class {
     }
   }
   registerInModule(filePath, className, arrayType) {
-    const sourceFile = this.project.addSourceFileAtPath(filePath);
+    const sourceFile = this.getProject().addSourceFileAtPath(filePath);
     const moduleClass = sourceFile.getClasses()[0];
     if (!moduleClass) {
       throw new Error(`No class found in ${filePath}`);
@@ -379,7 +393,7 @@ var ASTManipulator = class {
     }
   }
   updateBarrelExport(indexFilePath, exportPath) {
-    const sourceFile = this.project.addSourceFileAtPath(indexFilePath);
+    const sourceFile = this.getProject().addSourceFileAtPath(indexFilePath);
     const existingExport = sourceFile.getExportDeclarations().find((e) => e.getModuleSpecifierValue() === exportPath);
     if (!existingExport) {
       sourceFile.addExportDeclaration({
@@ -388,7 +402,7 @@ var ASTManipulator = class {
     }
   }
   async saveChanges() {
-    await this.project.save();
+    await this.getProject().save();
   }
 };
 
@@ -757,7 +771,13 @@ var AppGenerator = class extends BaseGenerator {
         await fs5.emptyDir(targetPath);
       }
       const scaffoldPath = path12.join(this.templateEngine.templatesPath, "project-scaffold");
-      await fs5.copy(scaffoldPath, targetPath, { overwrite: true });
+      await fs5.copy(scaffoldPath, targetPath, {
+        overwrite: true,
+        filter: (src) => {
+          const basename = path12.basename(src);
+          return basename !== "node_modules" && basename !== "dist" && basename !== ".turbo";
+        }
+      });
       await this.replaceTokens(targetPath, appName);
       try {
         execSync("git init", { cwd: targetPath, stdio: "pipe" });

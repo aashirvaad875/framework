@@ -24,8 +24,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          registry-url: 'https://npm.pkg.github.com'
+          node-version: "18"
+          registry-url: "https://npm.pkg.github.com"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -56,11 +56,11 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: pnpm release
-          commit: 'chore(release): publish packages'
-          title: 'chore(release): bump versions'
+          commit: "chore(release): publish packages"
+          title: "chore(release): bump versions"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}
 
       - name: Tag Release
         if: steps.changesets.outputs.published == 'true'
@@ -69,4 +69,4 @@ jobs:
           git config user.name "aashirvaad875"
           git tag -l | grep -E "^@dancha" | xargs -I {} git push origin {}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DEV_GITHUB_TOKEN }}
